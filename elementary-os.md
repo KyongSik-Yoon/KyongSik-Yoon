@@ -3,3 +3,4 @@
 카카오톡 설치 - https://itlearningcenter.tistory.com/entry/%E3%80%90Ubuntu-2004-LTS%E3%80%91%EC%B9%B4%EC%B9%B4%EC%98%A4%ED%86%A1-%EC%84%A4%EC%B9%98-1?category=844868  
 카카오톡 설치 이후 방화벽 설정 - https://gist.github.com/BEMELON/70f173af95480389445b6f52c6ffada7
 
+nameserver 변경 - https://wani.kr/posts/2017/03/22/ubuntu-resolvconf-settings-summary/
