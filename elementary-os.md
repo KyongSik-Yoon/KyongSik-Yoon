@@ -4,3 +4,5 @@
 카카오톡 설치 이후 방화벽 설정 - https://gist.github.com/BEMELON/70f173af95480389445b6f52c6ffada7
 
 nameserver 변경 - https://wani.kr/posts/2017/03/22/ubuntu-resolvconf-settings-summary/
+
+alt-shift 해제 - /usr/share/X11/xkb/symbols 내의 groups 파일에서 alt_shift 부분 주석처리 후 로그아웃 -> 로그인
