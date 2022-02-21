@@ -9,3 +9,5 @@ alt-shift 해제 - /usr/share/X11/xkb/symbols 내의 groups 파일에서 alt_shi
 오른쪽 alt 키를 한영키로 전환 - https://codechacha.com/ko/ubuntu-change-right-alt-to-hangul/
 
 dconfig-editor - ![image](https://user-images.githubusercontent.com/946619/153541888-974b61c7-557c-4d4d-8290-d162cdfc954d.png)
+
+enable hibernate - https://elementaryos.stackexchange.com/questions/21455/hibernation-on-elementaryos
