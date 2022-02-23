@@ -15,3 +15,5 @@ https://gist.github.com/choyan/6884351
 * secure boot 바이오스에서 disable 해야함.
 
 desktop file gen - https://tools51.nasqueron.org/generators/GNOME/desktop-file
+
+tmux battery 표시 - https://github.com/KyongSik-Yoon/Battery
