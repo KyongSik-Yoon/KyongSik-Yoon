@@ -13,3 +13,5 @@ dconfig-editor - ![image](https://user-images.githubusercontent.com/946619/15354
 enable hibernate - https://elementaryos.stackexchange.com/questions/21455/hibernation-on-elementaryos
 https://gist.github.com/choyan/6884351
 * secure boot 바이오스에서 disable 해야함.
+
+desktop file gen - https://tools51.nasqueron.org/generators/GNOME/desktop-file
