@@ -17,3 +17,5 @@ https://gist.github.com/choyan/6884351
 desktop file gen - https://tools51.nasqueron.org/generators/GNOME/desktop-file
 
 tmux battery 표시 - https://github.com/KyongSik-Yoon/Battery
+
+zsh autocomplete - https://github.com/marlonrichert/zsh-autocomplete
