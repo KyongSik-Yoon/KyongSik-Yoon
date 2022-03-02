@@ -14,3 +14,7 @@
 
 > 영구적용 `/etc/modprobe.d/hid_apple.conf` 에 `options hid_apple fnmode=0` 추가
 > sudo mkinitcpio -P 실행 후 재시작
+
+## tmux zsh 설정
+- .tmux.conf 에 다음 라인 추가
+- set -g default-command "/usr/bin/zsh"
