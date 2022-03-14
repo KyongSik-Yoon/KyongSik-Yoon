@@ -18,3 +18,6 @@
 ## tmux zsh 설정
 - .tmux.conf 에 다음 라인 추가
 - set -g default-command "/usr/bin/zsh"
+
+## 저장소 업데이트
+- sudo pacman-mirrors -g
