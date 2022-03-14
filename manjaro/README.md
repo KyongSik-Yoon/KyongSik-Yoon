@@ -20,4 +20,4 @@
 - set -g default-command "/usr/bin/zsh"
 
 ## 저장소 업데이트
-- sudo pacman-mirrors -g
+- sudo pacman-mirrors --country all
