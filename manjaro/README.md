@@ -21,3 +21,6 @@
 
 ## 저장소 업데이트
 - sudo pacman-mirrors --country all
+
+## 기본 컴파일을 위한 도구 설치
+- sudo pacman -S base-devel
