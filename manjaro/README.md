@@ -27,3 +27,6 @@
 
 ## 기본 컴파일을 위한 도구 설치
 - sudo pacman -S base-devel
+
+## 의존성 패키지 제거
+- pacman -R $(pacman -Qdtq)
