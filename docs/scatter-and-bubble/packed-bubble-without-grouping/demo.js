@@ -125,13 +125,6 @@ window.onload = function () {
         }
 
         const transformedData = ranges.map(item => {
-            // const appData = Object.entries(item.apps);
-            // const value = appData.map(([appName, { count, elapsedMillisSum }]) => ({
-            //     name: appName,
-            //     value: elapsedMillisSum / 1000 / count,
-            //     count: count
-            // }));
-
             return {
                 name: item.name,
                 data: item.apps,
