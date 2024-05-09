@@ -1,5 +1,5 @@
 Highcharts.setOptions({
-    colors: ['rgba(5,141,199,0.5)', 'rgba(80,180,50,0.5)', 'rgba(237,86,27,0.5)', 'rgba(255,0,0,1)']
+    colors: ['rgba(5,141,199,0.5)', 'rgba(80,180,50,0.5)', 'rgba(237,86,27,0.5)', 'rgba(255,0,0,0.5)']
 });
 
 const series = [{
@@ -15,7 +15,7 @@ const series = [{
     name: '3-5',
     id: '3-5',
     marker: {
-        symbol: 'triangle'
+        symbol: 'circle'
     },
     min: 3000,
     max: 5000,
@@ -33,7 +33,7 @@ const series = [{
     name: '8-',
     id: '8-',
     marker: {
-        symbol: 'square'
+        symbol: 'circle'
     },
     min: 8000,
     max: Infinity
@@ -42,7 +42,7 @@ const series = [{
 
 async function getData() {
     const response = await fetch(
-        'https://dev.jennifersoft.com/api/activeService/list?domain_id=7003&token=OhTFouCMJRZ'
+        'https://dev.jennifersoft.com/api/activeService/list?domain_id=7908&token=OhTFouCMJRZ'
     );
     return response.json();
 }
@@ -54,18 +54,29 @@ setInterval(updateChart, 2000);
 function updateChart() {
     getData().then(data => {
         const getData = (min, max) => {
-            const temp = [];
+            const temp = {};
             data.result.forEach(elm => {
                 if (elm.elapseTime >= min && elm.elapseTime < max) {
-                    temp.push([elm.startTime, elm.elapseTime / 1000, { name: elm.application, domainId: elm.domainId, instanceId: elm.instanceId }]);
+                    if (!temp[elm.application]) {
+                        temp[elm.application] = {
+                            count: 0,
+                            elapsedSum: 0
+                        }
+                    }
+                    temp[elm.application].count++;
+                    temp[elm.application].elapsedSum += (elm.elapseTime / 1000);
                 }
             });
             return temp;
         };
         series.forEach(s => {
-            s.data = getData(s.min, s.max);
+            const data = getData(s.min, s.max);
+            const chartData = Object.entries(data).map(elm => [
+                elm[1].count, elm[1].elapsedSum / elm[1].count
+            ]);
+            s.data = chartData;
         });
-    
+
         Highcharts.chart('container', {
             chart: {
                 type: 'scatter',
@@ -76,18 +87,11 @@ function updateChart() {
                 align: 'left'
             },
             xAxis: {
-                type: 'datetime',
                 title: {
-                    text: '시작시간'
+                    text: '호출건수'
                 },
                 labels: {
-                    formatter: function () {
-                        const date = new Date(this.value);
-                        const hours = date.getHours();
-                        const minutes = String(date.getMinutes()).padStart(2, '0');
-                        const seconds = String(date.getSeconds()).padStart(2, '0');
-                        return `${hours}:${minutes}:${seconds}`;
-                    }
+                    format: '{value}'
                 },
                 startOnTick: true,
                 endOnTick: true,
@@ -95,7 +99,7 @@ function updateChart() {
             },
             yAxis: {
                 title: {
-                    text: '응답시간'
+                    text: '평균 응답시간 (초)'
                 },
                 labels: {
                     format: '{value} s'
@@ -132,18 +136,10 @@ function updateChart() {
                 }
             },
             tooltip: {
-                formatter: function () {
-                    const date = new Date(this.x);
-                    const hours = date.getHours();
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    const formattedTime = `${hours}:${minutes}:${seconds}`;
-    
-                    return `<b>시작시간:</b> ${formattedTime}<br/><b>응답시간:</b> ${this.y}`;
-                }
+                format: '호출건수: {point.x}<br/>응답시간: {point.y}'
             },
             series
         });
-    });    
+    });
 }
 
