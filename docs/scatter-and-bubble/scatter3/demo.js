@@ -60,8 +60,8 @@ window.onload = function () {
             headerFormat: '<table width=300px>',
             pointFormat: '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
                 '<tr><th>호출건수:</th><td>{point.y}</td></tr>' +
+                '<tr><th>호출건수(5초이상):</th><td>{point.z}</td></tr>' +
                 '<tr><th>응답시간(평균):</th><td>{point.x}</td></tr>' +
-                '<tr><th>응답시간(합):</th><td>{point.z}</td></tr>' +
                 '<tr><th>인스턴스:</th><td>{point.instCount}</td></tr>',
             footerFormat: '</table>',
             followPointer: true
@@ -108,6 +108,7 @@ window.onload = function () {
                 statisticByApp[appName] = {
                     hitCount: 0,
                     elapsedMillisSum: 0,
+                    badResponseCount: 0,
                     instIds: {}
                 };
             }
@@ -115,6 +116,9 @@ window.onload = function () {
             statisticByApp[appName].elapsedMillisSum += elapsedMillis;
             if (!statisticByApp[appName].instIds[item.instanceId]) {
                 statisticByApp[appName].instIds[item.instanceId] = null;
+            }
+            if (elapsedMillis >= 5000) {
+                statisticByApp[appName].badResponseCount++; 
             }
         }
 
@@ -125,7 +129,7 @@ window.onload = function () {
                 name: appName,
                 x: statistics.elapsedMillisSum / 1000 / statistics.hitCount,
                 y: statistics.hitCount,
-                z: statistics.elapsedMillisSum / 1000,
+                z: statistics.badResponseCount,
                 instCount: Object.keys(statistics.instIds).length
             }
             return value;
