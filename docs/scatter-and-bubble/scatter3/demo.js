@@ -1,4 +1,28 @@
 window.onload = function () {
+    fetch('https://dev.jennifersoft.com/api/domain?token=OhTFouCMJRZ')
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                const comboBox = document.getElementById('domain-id');
+                data.result.forEach(item => {
+                    const option = document.createElement('option');
+                    option.text = item.name; 
+                    option.value = item.domainId; 
+                    comboBox.appendChild(option);
+                });
+
+                const desiredValue = 7003;
+                for (let i = 0; i < comboBox.options.length; i++) {
+                    if (comboBox.options[i].value == desiredValue) {
+                        comboBox.selectedIndex = i;
+                        break;
+                    }
+                }
+                updateChartData();
+            }
+        })
+        .catch(error => console.error('cannot get domain list:', error));
+
     const chart = Highcharts.chart('container', {
 
         chart: {
@@ -78,22 +102,24 @@ window.onload = function () {
         },
     });
 
-    updateChartData();
     setInterval(updateChartData, 5000);
 
     function updateChartData() {
         // REST API 호출
-        fetch('https://dev.jennifersoft.com/api/activeService/list?domain_id=7003&token=OhTFouCMJRZ')
+        const domainId = document.getElementById('domain-id').value;
+        if (!domainId) {
+            return;
+        }
+        fetch('https://dev.jennifersoft.com/api/activeService/list?domain_id=' + domainId + '&token=OhTFouCMJRZ')
             .then(response => response.json())
             .then(data => {
-                var chartData = processData(data);
-
-                while (chart.series.length > 0) {
-                    chart.series[0].remove(true);
+                if (data.result) {
+                    var chartData = processData(data);
+                    while (chart.series.length > 0) {
+                        chart.series[0].remove(true);
+                    }
+                    chart.addSeries(chartData);
                 }
-
-                chart.addSeries(chartData);
-
             }).catch(error => console.error(error));
     }
 
@@ -118,7 +144,7 @@ window.onload = function () {
                 statisticByApp[appName].instIds[item.instanceId] = null;
             }
             if (elapsedMillis >= 5000) {
-                statisticByApp[appName].badResponseCount++; 
+                statisticByApp[appName].badResponseCount++;
             }
         }
 
