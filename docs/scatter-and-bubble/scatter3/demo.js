@@ -36,7 +36,7 @@ window.onload = function () {
         },
 
         title: {
-            text: '액티브 서비스'
+            text: '액티브 서비스(애플리케이션 단위)'
         },
 
         xAxis: {
