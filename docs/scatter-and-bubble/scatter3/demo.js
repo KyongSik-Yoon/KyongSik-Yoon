@@ -151,12 +151,27 @@ window.onload = function () {
         const transformedData = Object.entries(statisticByApp).map((item) => {
             const appName = item[0];
             const statistics = item[1];
+            const avgElaspedSecond = statistics.elapsedMillisSum / 1000 / statistics.hitCount
+            var color;
+            if (avgElaspedSecond >= 0) {
+                color =  '#95D7FE';           
+            }
+            if (avgElaspedSecond >= 3) {
+                color = '#C8F3F0';
+            }
+            if (avgElaspedSecond >= 5) {
+                color = '#FEDAB4';
+            }
+            if (avgElaspedSecond >= 8) {
+                color = '#FDAD85';
+            }
             const value = {
                 name: appName,
-                x: statistics.elapsedMillisSum / 1000 / statistics.hitCount,
+                x: avgElaspedSecond,
                 y: statistics.hitCount,
                 z: statistics.badResponseCount,
-                instCount: Object.keys(statistics.instIds).length
+                instCount: Object.keys(statistics.instIds).length,
+                color: color
             }
             return value;
         });
