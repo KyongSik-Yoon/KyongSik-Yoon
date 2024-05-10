@@ -51,20 +51,45 @@ window.onload = function () {
                 color: 'black',
                 dashStyle: 'dot',
                 width: 2,
-                value: 65,
+                value: 3,
                 label: {
                     rotation: 0,
-                    y: 8,
+                    y: 15,
                     style: {
                         fontStyle: 'italic'
                     },
-                    text: 'Bad response'
+                    text: '3s-5s'
+                },
+                zIndex: 3
+            }, {
+                color: 'black',
+                dashStyle: 'dot',
+                width: 2,
+                value: 5,
+                label: {
+                    rotation: 0,
+                    y: 15,
+                    style: {
+                        fontStyle: 'italic'
+                    },
+                    text: '5s-8s'
+                },
+                zIndex: 3
+            }, {
+                color: 'black',
+                dashStyle: 'dot',
+                width: 2,
+                value: 8,
+                label: {
+                    rotation: 0,
+                    y: 15,
+                    style: {
+                        fontStyle: 'italic'
+                    },
+                    text: '8s-'
                 },
                 zIndex: 3
             }],
-            accessibility: {
-                rangeDescription: 'Range: 60 to 100 grams.'
-            }
         },
 
         yAxis: {
