@@ -6,8 +6,8 @@ window.onload = function () {
                 const comboBox = document.getElementById('domain-id');
                 data.result.forEach(item => {
                     const option = document.createElement('option');
-                    option.text = item.name; 
-                    option.value = item.domainId; 
+                    option.text = item.name;
+                    option.value = item.domainId;
                     comboBox.appendChild(option);
                 });
 
@@ -109,7 +109,7 @@ window.onload = function () {
             headerFormat: '<table width=300px>',
             pointFormat: '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
                 '<tr><th>호출건수:</th><td>{point.y}</td></tr>' +
-                '<tr><th>호출건수(5초이상):</th><td>{point.z}</td></tr>' +
+                '<tr><th>호출건수(8초이상):</th><td>{point.z}</td></tr>' +
                 '<tr><th>응답시간(평균):</th><td>{point.x}</td></tr>' +
                 '<tr><th>인스턴스:</th><td>{point.instCount}</td></tr>',
             footerFormat: '</table>',
@@ -121,13 +121,20 @@ window.onload = function () {
                 animation: true,
                 dataLabels: {
                     enabled: true,
-                    format: '{point.name}'
+                    //format: '{point.name}'
+                    formatter: function() {
+                        if (this.point.z > 0) {
+                            return this.point.name;
+                        } else {
+                            return '';
+                        }
+                    }
                 }
             }
         },
     });
 
-    setInterval(updateChartData, 5000);
+    setInterval(updateChartData, 4000);
 
     function updateChartData() {
         // REST API 호출
@@ -168,34 +175,41 @@ window.onload = function () {
             if (!statisticByApp[appName].instIds[item.instanceId]) {
                 statisticByApp[appName].instIds[item.instanceId] = null;
             }
-            if (elapsedMillis >= 5000) {
+            if (elapsedMillis >= 8000) {
                 statisticByApp[appName].badResponseCount++;
             }
         }
 
         const transformedData = Object.entries(statisticByApp).map((item) => {
             const appName = item[0];
-            const statistics = item[1];
-            const avgElaspedSecond = statistics.elapsedMillisSum / 1000 / statistics.hitCount
-            var color;
-            if (avgElaspedSecond >= 0) {
-                color =  '#95D7FE';           
+            const statistic = item[1];
+            const avgElaspedSecond = statistic.elapsedMillisSum / 1000 / statistic.hitCount
+
+            var color = '#95D7FE'; // blue
+
+            if (avgElaspedSecond >= 8 || statistic.badResponseCount > 0) {
+                color = '#FDAD85'; // red 
             }
-            if (avgElaspedSecond >= 3) {
-                color = '#C8F3F0';
-            }
-            if (avgElaspedSecond >= 5) {
-                color = '#FEDAB4';
-            }
-            if (avgElaspedSecond >= 8) {
-                color = '#FDAD85';
-            }
+
+            // if (avgElaspedSecond >= 0) {
+            //     color =  '#95D7FE';           
+            // }
+            // if (avgElaspedSecond >= 3) {
+            //     color = '#C8F3F0';
+            // }
+            // if (avgElaspedSecond >= 5) {
+            //     color = '#FEDAB4';
+            // }
+            // if (avgElaspedSecond >= 8) {
+            //     color = '#FDAD85';
+            // }
+
             const value = {
                 name: appName,
                 x: avgElaspedSecond,
-                y: statistics.hitCount,
-                z: statistics.badResponseCount,
-                instCount: Object.keys(statistics.instIds).length,
+                y: statistic.hitCount,
+                z: statistic.badResponseCount,
+                instCount: Object.keys(statistic.instIds).length,
                 color: color
             }
             return value;
@@ -203,7 +217,6 @@ window.onload = function () {
 
         return {
             data: transformedData,
-            colorByPoint: true
         };
     }
 }
