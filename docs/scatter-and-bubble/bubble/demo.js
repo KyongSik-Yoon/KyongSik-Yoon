@@ -41,7 +41,7 @@ window.onload = function () {
 
         xAxis: {
             gridLineWidth: 1,
-            max: 4,
+            max: 1,
             title: {
                 text: '평균 응답시간'
             },
