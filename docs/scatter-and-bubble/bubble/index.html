@@ -1,14 +1,37 @@
 <html>
 <meta charset="UTF-8">
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/highcharts-more.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/export-data.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<head>
 
-<script src="demo.js"></script>
-<link href="demo.css" rel="stylesheet">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <script src="demo.js"></script>
+    <link href="demo.css" rel="stylesheet">
+
+    <style>
+        body,
+        html {
+            height: 98%;
+            width: 100vw;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #container {
+            height: 98%;
+            width: 100vw;
+        }
+
+        .highcharts-figure {
+            margin: 0px
+        }
+        
+    </style>
+</head>
 
 <body>
     도메인
@@ -17,7 +40,7 @@
         <div id="container"></div>
         <p class="highcharts-description">
             * 원의 크기, 색상, 라벨 표시 여부는 bad response 에 의존적 (이 데모에서는 8초로 고정) <br>
-            - 크기: bad response 비례 <br> 
+            - 크기: bad response 비례 <br>
             - 색상: bad response 가 하나라도 있으면 빨간색 <br>
             - 라벨: bad response 가 하나라도 있으면 표시
             <br>

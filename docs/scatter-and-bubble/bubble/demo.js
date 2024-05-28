@@ -28,7 +28,7 @@ window.onload = function () {
         chart: {
             type: 'bubble',
             plotBorderWidth: 1,
-            zoomType: 'xy'
+            zoomType: 'xy',
         },
 
         legend: {
@@ -36,7 +36,7 @@ window.onload = function () {
         },
 
         title: {
-            text: '액티브 서비스(애플리케이션 단위)'
+            text: '액티브 서비스 분포'
         },
 
         xAxis: {
