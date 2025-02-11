@@ -1,0 +1,26 @@
+[Unit]
+Description=Set Power Limits using powercap-set
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/powercap-set -p intel-rapl -z 0 -c 0 -l 23500000
+ExecStart=/usr/bin/powercap-set -p intel-rapl -z 0 -c 1 -l 28000000
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+root@sam-nano:/etc/systemd/system# systemctl edit powercap-limits.service 
+root@sam-nano:/etc/systemd/system# cat powercap-limits.service 
+[Unit]
+Description=Set Power Limits using powercap-set
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/powercap-set -p intel-rapl -z 0 -c 0 -l 23500000
+ExecStart=/usr/bin/powercap-set -p intel-rapl -z 0 -c 1 -l 28000000
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
