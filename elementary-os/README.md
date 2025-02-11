@@ -19,3 +19,5 @@ desktop file gen - https://tools51.nasqueron.org/generators/GNOME/desktop-file
 tmux battery 표시 - https://github.com/KyongSik-Yoon/Battery
 
 zsh autocomplete - https://github.com/marlonrichert/zsh-autocomplete
+
+전력 제한 - sudo apt install powercap-utils 후 sudo systemctl edit power-profiles-daemon.service 로 pl1, pl2 제한
