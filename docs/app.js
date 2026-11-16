@@ -1150,6 +1150,8 @@
   async function playCast() {
     const run = ++cast.run;
     window.clearTimeout(cast.loopTimer);
+    cast.paused = false;
+    cast.userPaused = false;
     cast.finished = false;
     cast.screen.innerHTML = "";
     setCastProgress(0);
@@ -1938,6 +1940,12 @@
     }
 
     if (target === els.lbStage) closeLightbox();
+  });
+
+  // A block is painted in once. Without this the wipe would replay every time its pane
+  // comes back from display:none (each tab switch on a phone).
+  document.addEventListener("animationend", (e) => {
+    if (e.animationName === "paint-in" && e.target instanceof Element) e.target.classList.remove("paint");
   });
 
   // Focus follows the pointer press, like a multiplexer with mouse support.

@@ -34,6 +34,8 @@
         if (!theme) theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "paper" : "tokyo-night";
         d.setAttribute("data-theme", theme);
         d.setAttribute("data-crt", crt || (theme === "amber" || theme === "phosphor" ? "on" : "off"));
+        var bar = { paper: "#fafafa", amber: "#0c0802", phosphor: "#020a05" }[theme];
+        if (bar) document.querySelector('meta[name="theme-color"]').setAttribute("content", bar);
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

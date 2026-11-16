@@ -608,8 +608,8 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
       en: "A typed replay of the README example.",
     },
     real: {
-      ko: "도구가 실제로 낸 출력입니다 (tmux 캡처, 호스트명은 가림).",
-      en: "Real output from the tool (tmux capture, hostnames masked).",
+      ko: "도구가 실제로 낸 출력입니다 (tmux 캡처).",
+      en: "Real output from the tool (tmux capture).",
     },
     video: {
       ko: "실제 화면 녹화 · 52초 · 소리 없음",
@@ -812,8 +812,8 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
           cols: 84,
           title: "ts-gate",
           caption: {
-            ko: "대화형 TUI 목록 화면 — 실제 화면 캡처 (예시 엔드포인트, 호스트명은 가림)",
-            en: "The TUI list screen — a real capture (sample endpoints, hostname masked)",
+            ko: "대화형 TUI 목록 화면 — 실제 화면 캡처 (예시 엔드포인트, 호스트명과 외부 포트 목록은 바꿔 넣음)",
+            en: "The TUI list screen — a real capture (sample endpoints; hostname and external port list replaced)",
           },
         },
         {
