@@ -36,38 +36,38 @@
       {
         title: { ko: "AI 하네스 & 터미널 UX 엔지니어링", en: "AI Harness & Terminal UX" },
         desc: {
-          ko: "Claude Code(cc-desktop-mod)와 Antigravity CLI(agy-cli-patch)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조해 장시간 세션 가독성을 극대화합니다.",
-          en: "Customizes Claude Code and Antigravity CLI output rendering, statuslines, and side panes for long-running terminal workflows.",
+          ko: "herdr v0.9.5 멀티플렉서 환경 위에서 Claude Code(cc-desktop-mod v0.81.2)와 Antigravity CLI(agy-cli-patch v0.2.4)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조합니다.",
+          en: "Customizes Claude Code (cc-desktop-mod v0.81.2) and Antigravity CLI (agy-cli-patch v0.2.4) rendering, statuslines, and side panes inside herdr v0.9.5.",
         },
       },
       {
         title: { ko: "안전 게이트 & 모델 오케스트레이션", en: "Safety Gates & Model Routing" },
         desc: {
-          ko: "Gemini Decisions API(agy-decision-lab)로 파괴적 셸 명령을 사전 차단하고 서브에이전트·스웜 모델을 작업 복잡도에 따라 동적으로 라우팅합니다.",
-          en: "Gates destructive commands via Gemini Decisions API and dynamically routes subagent/swarm models by task complexity.",
+          ko: "Gemini Decisions API 기반 3대 독립 플러그인(decision · decision-stop · decision-subagent)으로 위험 명령 차단, diff 체크리스트 심사, Gemini 4 10단계 동적 모델 라우팅을 수행합니다.",
+          en: "Runs three native plugins (decision, decision-stop, decision-subagent) for 0ms shell safety gating, diff audits, and 10-tier Gemini 4 subagent/swarm routing.",
         },
       },
       {
         title: { ko: "크로스 디바이스 연결 & 프라이버시", en: "Cross-Device Bridge & Privacy" },
         desc: {
-          ko: "Tailscale 기반 임시 포트 게이트(ts-gate), Linux 원격 데몬(gemini-remote-linux), 온디바이스 음성 받아쓰기(soksak)로 안전한 개인 개발 환경을 구축합니다.",
-          en: "Connects Android, Linux desktops, and tailnet services privately via ts-gate, gemini-remote-linux, and on-device soksak.",
+          ko: "Tailscale 기반 임시 포트 게이트(ts-gate v0.1.0), Linux 원격 데몬(gemini-remote-linux), 온디바이스 음성 받아쓰기(soksak + soksak-daemon)로 안전한 개인 개발 환경을 구축합니다.",
+          en: "Connects Android, Linux desktops, and tailnet services privately via ts-gate v0.1.0, gemini-remote-linux, and on-device soksak.",
         },
       },
     ],
     installCmd: "git clone https://github.com/KyongSik-Yoon/KyongSik-Yoon.git",
     cliBlockTitle: "workspace-index.sh",
     cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "cc-desktop|soksak|agy-|gemini-remote|ts-gate"
-cc-desktop-mod      # Claude Code 데스크톱 스타일 플러그인 스위트
-soksak              # Android 온디바이스 한국어 + 개발용어 음성 받아쓰기
-agy-cli-patch       # Antigravity CLI(agy) 무의존성 동적 바이너리 패처
-agy-decision-lab    # Gemini Decisions API 안전 게이트·스웜 라우터·MCP
-gemini-remote-linux # Linux PC ↔ Gemini 모바일/웹 원격 제어 Go 데몬
-ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니저`,
+cc-desktop-mod      # v0.81.2 · Claude Code 데스크톱 스타일 플러그인 스위트
+soksak              # Android 온디바이스 한국어/개발용어 받아쓰기 + Rust PC 데몬
+agy-cli-patch       # v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처
+agy-decision-lab    # Gemini Decisions API 안전 게이트·스웜 라우터·5종 MCP
+gemini-remote-linux # Go 1.27.3 · Linux PC ↔ Gemini 모바일/웹/데스크톱 원격 데몬
+ts-gate             # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이트 TUI/CLI`,
     archNodes: [
       "Android (soksak)",
       "Tailscale Mesh (ts-gate)",
-      "Herdr Mux + Collie",
+      "Herdr v0.9.5 + Collie",
       "Claude / Antigravity CLI",
       "Decision Gate & Plugins",
     ],
@@ -75,14 +75,14 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
       type: "custom-herdr",
       row1: {
         model: "herdr[v0.9.5]",
-        tag: "mux",
+        tag: "IME+screen",
         ctxPct: 38,
         dir: "~/KyongSik-Yoon",
         branch: "main",
         extra: "6 spaces active",
       },
-      row2: { label: "claude", p5: 18, t5: "3h12m", p7: 45, t7: "2d0h", extra: "cc-desktop-mod" },
-      row3: { label: "gemini", p5: 24, t5: "2h45m", p7: 60, t7: "3d4h", extra: "agy-cli-patch · decision-lab" },
+      row2: { label: "claude", p5: 18, t5: "3h12m", p7: 45, t7: "2d0h", extra: "cc-desktop-mod v0.81.2" },
+      row3: { label: "gemini", p5: 24, t5: "2h45m", p7: 60, t7: "3d4h", extra: "agy-cli-patch v0.2.4 · decision-lab" },
     },
   };
 
@@ -100,60 +100,61 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
       repoUrl: "https://github.com/KyongSik-Yoon/cc-desktop-mod",
       siteUrl: "https://kyongsik-yoon.github.io/cc-desktop-mod/",
       sub: {
-        ko: "Claude Code 데스크톱 UX 플러그인 스위트",
-        en: "Claude Desktop UI mod & side-pane suite for Claude Code",
+        ko: "v0.81.2 · Claude Code 데스크톱 UX 플러그인 스위트",
+        en: "v0.81.2 · Claude Desktop UI mod & side-pane suite",
       },
       summary: {
-        ko: "Claude Code 터미널 UI를 Claude 데스크톱 앱의 Code 탭 감각(프롬프트 말풍선, 상단 Progress Band, 접히는 도구 호출, 마크다운 테이블·Mermaid 렌더링, 사이드 패인)으로 탈바꿈시키는 TypeScript 플러그인 마켓플레이스입니다.",
-        en: "Transforms the Claude Code terminal UI into a Claude Desktop-inspired workspace with prompt bubbles, a live Progress Band, folded tool runs, native Mermaid/table rendering, and interactive side panes.",
+        ko: "Claude Code(>=2.1.323) 터미널 UI를 데스크톱 앱의 Code 탭 감각(프롬프트 말풍선, 상단 Progress Band, 접히는 도구 호출, 마크다운·Mermaid 렌더링, 줄 댓글 Diff·미리보기 패인)으로 탈바꿈시키는 플러그인 마켓플레이스(v0.81.2)입니다.",
+        en: "Transforms Claude Code (>=2.1.323) terminal UI into a Claude Desktop workspace with prompt bubbles, live Progress Band, folded tool runs, Mermaid/table rendering, and inline line-comment diff/preview panes (v0.81.2).",
       },
-      stack: ["TypeScript", "Node.js", "Claude Code Plugin API", "MIT"],
+      stack: ["TypeScript", "v0.81.2", "Claude Code >=2.1.323", "MIT"],
       features: [
         {
           title: { ko: "데스크톱 말풍선 & Progress Band", en: "Prompt Bubbles & Progress Band" },
           desc: {
-            ko: "사용자 입력을 액센트 말풍선으로 구분하고, 에이전트 실행 중에는 현재 스텝·컨텍스트 게이지(◑ 42%)·Git 브랜치·백그라운드 태스크 칩을 상단 밴드에 고정 표시합니다.",
-            en: "Styles prompts as accented bubbles and pins live step state, context percentage, branch, and background jobs in a compact Progress Band.",
+            ko: "입력 프롬프트를 액센트 말풍선으로 구분하고, 작업 중 현재 스텝·CPU/경과시간·PR 체크 칩(#12 ✓ 5/5)·컨텍스트(◑ 62%)·백그라운드 태스크를 상단 밴드에 표시합니다.",
+            en: "Styles prompts as accented bubbles while pinning current step, running process CPU/time, PR check chips, context usage, and background tasks.",
           },
         },
         {
-          title: { ko: "도구 호출 접기 & 리치 렌더링", en: "Folded Tool Calls & Rich Blocks" },
+          title: { ko: "줄 댓글(Line Comments) · Diff & 미리보기 패인", en: "Line Comments in Diff, Preview & Plan" },
           desc: {
-            ko: "장황한 도구 로그를 'Ran 2 commands, edited a file ›' 한 줄로 접어두고, 코드 복사 버튼(⧉ copy), 유니코드 박스 Mermaid 다이어그램, Alert 카드를 네이티브로 그립니다.",
-            en: "Folds noisy tool invocations into single summary rows while rendering copyable code blocks, Mermaid box diagrams, and GitHub-style alerts.",
+            ko: "/desk-diff 줄 단위 코멘트는 물론, /desk-preview(단축키 c)와 desk-plan 승인 카드(3)에서 계획·마크다운 문서 라인별 댓글을 패널 전폭 입력칸으로 작성해 다음 프롬프트에 실어 보냅니다.",
+            en: "Write inline line/range comments in /desk-diff, Markdown preview (/desk-preview with 'c'), or desk-plan approval cards ('3') via full-width comment fields synced into your next prompt.",
           },
         },
         {
-          title: { ko: "전용 사이드 패인 생태계", en: "Integrated Side-Pane Ecosystem" },
+          title: { ko: "통합 사이드 패인 & 마켓플레이스 5종", en: "Integrated Panes & 5 Marketplace Plugins" },
           desc: {
-            ko: "/desk-plan(플랜 승인 카드), /desk-review(리뷰·Diff 패인), /desk-asana(태스크 조회/댓글), /desk-slack(DM 패인) 플러그인을 한 번에 제공합니다.",
-            en: "Includes /desk-plan, /desk-review, /desk-asana, and /desk-slack side panes tailored for terminal workflows.",
+            ko: "desk-look(/desk-pr GitHub·GitLab 머지, /desk-tasks, /desk-context, /desk-monitor)에 더해 desk-plan, desk-review(/simplify→/code-review), desk-asana, desk-slack 4종을 함께 제공합니다.",
+            en: "Ships desk-look (/desk-pr, /desk-tasks, /desk-context, Linux /desk-monitor) plus separate desk-plan, desk-review, desk-asana, and desk-slack plugins.",
           },
         },
       ],
       installCmd: "/plugin install desk-look --marketplace KyongSik-Yoon/cc-desktop-mod",
-      cliBlockTitle: "claude-code :: desk-look session",
-      cliSnippet: `/plugin marketplace add KyongSik-Yoon/cc-desktop-mod
-/plugin install desk-look@cc-desktop-mod
+      cliBlockTitle: "claude-code :: desk-look v0.81.2",
+      cliSnippet: `/plugin install desk-look --marketplace KyongSik-Yoon/cc-desktop-mod
 /plugin install desk-plan@cc-desktop-mod
-/plugin install desk-review@cc-desktop-mod`,
+/plugin install desk-review@cc-desktop-mod
+/plugin install desk-asana@cc-desktop-mod
+/plugin install desk-slack@cc-desktop-mod`,
       simPreview: {
-        prompt: "❯ cc-desktop-mod의 Mermaid 렌더러와 diff 패인 구조 정리해줘",
-        fold: "▸ Ran 2 commands, read 4 files ›  (src/render/mermaid.ts, src/panes/diff.ts)",
+        prompt: "❯ cc-desktop-mod v0.81.2 줄 댓글과 미리보기 패인 구조 정리해줘",
+        fold: "▸ Ran 2 commands, read 4 files ›  (src/panes/diff.ts, src/panes/preview.ts)",
         answer: [
-          "┌────────────────┐      ┌─────────────────┐",
-          "│ Claude Hook    │─────▶│ Desk Look Strip │",
-          "└────────────────┘      └────────┬────────┘",
-          "                                 ▼",
-          "                  [Prompt Bubble + Side Diff Pane]",
+          "┌────────────────┐      ┌──────────────────────┐",
+          "│ Claude Hook    │─────▶│ Desk Look Band v0.81 │",
+          "└────────────────┘      └──────────┬───────────┘",
+          "                                   ▼",
+          "       [/desk-diff & /desk-preview Line Comments]",
         ].join("\n"),
-        band: "● step 3/3 · main · ctx ◑ 42% · PR !48 open · 0 bg jobs",
+        band: "● step 3/3 · main · ctx ◑ 42% · PR #88 ✓ · 0 bg jobs",
       },
       archNodes: [
-        "Claude Code PTY / Hooks",
-        "desk-look Renderer",
-        "Bubble / Fold / Mermaid",
-        "Side Pane (Plan · Diff · Asana · Slack)",
+        "Claude Code >=2.1.323",
+        "desk-look v0.81.2 Renderer",
+        "Bubble / Fold / Line Comments",
+        "desk-plan · review · asana · slack",
       ],
       statusline: {
         type: "claude",
@@ -193,7 +194,7 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
       name: "soksak",
       badge: "whisper-npu",
       badgeClass: "badge-custom",
-      cwd: "~/dev/git-repo/openWispr",
+      cwd: "~/dev/git-repo/soksak",
       branch: "main",
       agent: "soksak",
       repoUrl: "https://github.com/KyongSik-Yoon/soksak",
@@ -203,54 +204,56 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
         en: "Soksak — On-device Korean + dev-jargon Android voice dictation",
       },
       summary: {
-        ko: "음성을 서버로 전혀 보내지 않고 기기 내부(whisper.cpp CPU 또는 Qualcomm Hexagon NPU)에서 한국어와 영어 개발 용어를 즉시 받아써 활성 입력창이나 Tailscale을 거쳐 PC 클립보드에 꽂아주는 Android 앱(OpenWispr 포크)입니다.",
-        en: "100% offline Android voice dictation forked from OpenWispr. Recognizes mixed Korean and technical English terms via whisper.cpp or Qualcomm NPU, injects text without stealing focus, or forwards to PC over Tailscale.",
+        ko: "음성을 서버로 전혀 보내지 않고 기기 내부(whisper.cpp CPU 또는 Qualcomm QNN NPU)에서 한국어·영어 개발 용어를 즉시 받아써 활성 입력창이나 Tailscale 무의존성 Rust 데몬(soksak-daemon)을 거쳐 PC 클립보드에 꽂아주는 Android 앱입니다.",
+        en: "100% offline Android voice dictation forked from OpenWispr. Recognizes mixed Korean/English tech terms via whisper.cpp or Qualcomm NPU and optionally relays transcripts over Tailscale to soksak-daemon.",
       },
-      stack: ["Kotlin", "C++", "whisper.cpp", "sherpa-onnx + QNN", "CAM++ / VoxLock"],
+      stack: ["Kotlin", "C++", "whisper.cpp", "sherpa-onnx + QNN", "Rust daemon (std)"],
       features: [
         {
           title: { ko: "플로팅 버블 & 자동 엔터(⏎)", en: "Floating Bubble & Auto-Enter (⏎)" },
           desc: {
-            ko: "접근성 서비스를 이용해 어떤 앱에서도 포커스를 빼앗지 않고 글을 입력하며, 설정에 따라 1~5초 후 Enter까지 자동 전송해 모바일 에이전트 프롬프트를 손대지 않고 보냅니다.",
-            en: "Injects dictated text via AccessibilityService without losing focus, with optional 1–5s auto-enter countdown rings for hands-free agent prompts.",
+            ko: "접근성 서비스로 포커스를 빼앗지 않고 글을 삽입하며, 1~5초 후 Enter를 눌러 주는 자동 엔터 링(버블 터치 시 취소)으로 모바일 에이전트 프롬프트를 손대지 않고 보냅니다.",
+            en: "Injects text via AccessibilityService without stealing focus, featuring an optional 1–5s auto-enter ring countdown (tap bubble to cancel).",
           },
         },
         {
-          title: { ko: "CAM++ · VoxLock 내 목소리 분리", en: "CAM++ & VoxLock Speaker Isolation" },
+          title: { ko: "CAM++ · VoxLock & Snapdragon NPU", en: "CAM++ VoxLock & SM8850/SM8750 NPU" },
           desc: {
-            ko: "내 목소리를 등록하면 쉬는 틈의 TV·주변 대화 소음을 걸러내고, 시끄러운 환경에서는 NPU 기반 VoxLock으로 겹친 음성 중 내 발화만 분리해 냅니다.",
-            en: "Registers speaker embeddings to reject background TV/voices and runs VoxLock NPU separation in noisy environments.",
+            ko: "내 목소리 등록(CAM++)과 VoxLock으로 주변 TV·타인 음성을 분리하며, Snapdragon 8 Elite Gen 5(SM8850)와 Snapdragon 8 Elite(SM8750) 실기기에서 Large v3 Turbo NPU를 정식 지원합니다.",
+            en: "Filters speaker noise with CAM++ and VoxLock, running Whisper Large v3 Turbo natively on Qualcomm NPU across both SM8850 and verified SM8750 devices.",
           },
         },
         {
-          title: { ko: "Qualcomm NPU & Tailscale PC 직송", en: "Hexagon NPU & Tailscale PC Daemon" },
+          title: { ko: "Tailscale PC 직송 · 프라이버시 데몬", en: "soksak-daemon (:48620) & soksak-paste" },
           desc: {
-            ko: "Snapdragon 8 Elite / Gen 5 QNN 번들로 Large v3 Turbo를 초고속 구동하며, 받아쓴 문장을 Tailscale 망을 통해 Linux 데스크톱 클립보드(soksak-daemon)로 바로 쏠 수 있습니다.",
-            en: "Runs Whisper Large v3 Turbo on Snapdragon 8 Elite QNN NPU and optionally relays transcripts to soksak-daemon over Tailscale.",
+            ko: "무의존성 Rust 데몬(포트 48620)이 Tailscale 망과 연동 코드로 PC 클립보드에 텍스트를 수신(로그에 발화 내용 미기록)하며, Hyprland 한글 IME 깨짐을 막는 soksak-paste를 지원합니다.",
+            en: "Zero-dependency Rust daemon on Tailscale port 48620 relays clipboard text (never logging content) with soksak-paste for IME-safe Hyprland input.",
           },
         },
       ],
-      installCmd: "cd android && ./gradlew :app:assembleDebug :app:testDebugUnitTest",
-      cliBlockTitle: "soksak-daemon :: android → linux tailnet relay",
-      cliSnippet: `$ soksak-daemon status
-● daemon listening on tailnet 100.64.x.y:48720 (TLS peer verified)
-  model      : whisper-large-v3-turbo (QNN SM8850 NPU)
-  speaker-id : CAM++ VoxLock armed (threshold 0.72)
-  vocab-pack : korean-dev-terms + aliases (412 entries)
+      installCmd: "soksak-daemon pair && systemctl --user enable --now soksak-daemon",
+      cliBlockTitle: "soksak-daemon :: pair & tailnet relay (:48620)",
+      cliSnippet: `$ soksak-daemon pair
+In Soksak: Settings -> Send to PC
+  PC address    100.64.0.42:48620
+  Pairing code  7482-9103
 
-[14:22:08] rx "지금 herdr 사이드바에서 statusline 패치 적용해줘" -> wl-copy + paste (118ms)`,
+$ soksak-daemon
+listening on port 48620 (Tailscale only); run \`soksak-daemon pair\` for the pairing code
+
+$ soksak-daemon send 127.0.0.1:48620 "시험"   # local relay check (text not logged)`,
       archNodes: [
         "Mic AudioRecord",
         "CAM++ / VoxLock Filter",
         "whisper.cpp / QNN NPU",
         "Dev Alias Correction",
-        "Android Input / Tailnet PC",
+        "Android Input / soksak-daemon :48620",
       ],
       statusline: {
         type: "custom-soksak",
         row1: {
           model: "whisper-v3-turbo[qnn-npu]",
-          engine: "SM8850",
+          engine: "SM8850 · SM8750",
           rtfPct: 16,
           rtfLabel: "0.16x RTF",
           target: "android → soksak-daemon",
@@ -264,9 +267,9 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
         },
         row3: {
           label: "tailnet",
-          host: "sam@omarchy:48720",
+          host: "sam@omarchy:48620",
           autoEnter: "auto-⏎ 2.0s",
-          vocab: "412 dev aliases",
+          vocab: "Korean + dev aliases",
         },
       },
     },
@@ -283,53 +286,57 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
       repoUrl: "https://github.com/KyongSik-Yoon/agy-cli-patch",
       siteUrl: "https://agy-cli-patch.ksyoon.com/",
       sub: {
-        ko: "Antigravity CLI(agy) 무의존성 동적 바이너리 패처",
-        en: "Modular zero-dependency dynamic binary patcher for Antigravity CLI",
+        ko: "v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처",
+        en: "v0.2.4 · 9-patch zero-dependency binary patcher for Antigravity CLI",
       },
       summary: {
-        ko: "Antigravity CLI(agy) Go/네이티브 바이너리를 실행 파일 업데이트마다 깨지지 않게 .gopclntab 심볼과 기계어 오프코드 시그니처 스캔으로 분석하여, 타자기 딜레이 제거·일괄 렌더링·CJK 볼드 깨짐·단일 물결 취소선·컴팩션 임계치를 핫패치하는 Rust 도구입니다.",
-        en: "Zero-dependency Rust binary patcher for Antigravity CLI (agy). Scans ELF64/Mach-O .gopclntab symbols and opcode signatures to patch textDrip delay, streaming batch jitter, CJK bold parsing, single-tilde strike, and compaction thresholds.",
+        ko: "Antigravity CLI(agy — Linux & macOS, x86_64 & ARM64)의 ELF64/Mach-O .gopclntab 심볼과 기계어 시그니처를 mmap으로 탐색해 스트리밍·CJK 마크다운·코드 테마·컴팩션 임계치 등 9종 패치를 적용하는 무의존성 Rust TUI/CLI 도구(v0.2.4)입니다.",
+        en: "Zero-dependency Rust TUI/CLI binary patcher (v0.2.4) for Antigravity CLI across Linux & macOS (x86_64 & ARM64). Scans .gopclntab and opcode signatures via mmap to apply 9 modular patches with automatic backup and Mach-O re-signing.",
       },
-      stack: ["Rust (std only)", "ELF64 / Mach-O 64", "x86_64 & ARM64", "Zero Deps"],
+      stack: ["Rust (std only)", "v0.2.4", "ELF64 / Mach-O 64", "x86_64 & ARM64"],
       features: [
         {
-          title: { ko: "고정 오프셋 없는 동적 시그니처 스캔", en: "Dynamic Signature Scanning" },
+          title: { ko: "대화형 3단계 TUI & 동적 시그니처 스캔", en: "Interactive TUI & .gopclntab Scan" },
           desc: {
-            ko: "외부 크레이트 의존성 없이 mmap으로 Go 심볼 테이블과 인스트럭션 패턴을 탐색해 버전이 올라가도 정확히 패치 지점을 찾습니다.",
-            en: "Parses .gopclntab and instruction signatures via pure std Rust mmap with zero third-party crate dependencies.",
+            ko: "인자 없이 실행하면 raw ANSI 3단계 TUI로 패치 가능 여부를 사전 대조하며, --preset은 agy-batch·agy-nodrip 2종을 자동 갱신합니다(Apple Silicon 9종 전체 / Linux ARM64 7종 지원).",
+            en: "Launches a 3-step raw-ANSI TUI when invoked without args, pre-checks opcode compatibility, and offers --preset for agy-batch / agy-nodrip (all 9 patches on Apple Silicon, 7 on Linux ARM64).",
           },
         },
         {
-          title: { ko: "nodrip · batch · compact 성능 튜닝", en: "nodrip · batch · compact Tuning" },
+          title: { ko: "전체 9종 모듈형 바이너리 패치", en: "All 9 Modular Patches (-p)" },
           desc: {
-            ko: "16ms/12B 타자기 드립 딜레이를 제거(nodrip)하고 턴 완료 시 마크다운을 일괄 출력(batch)하며, 256k 기본 컴팩션 임계치를 180k 등 원하는 단가 경계로 조정합니다.",
-            en: "Disables 16ms typewriter drip, batches turn markdown output cleanly, and retargets auto-compaction thresholds.",
+            ko: "nodrip, batch, heading, cjk-bold, tilde-strike, code-theme(흐린 native→vs/bw 등 교체), compact(32k~1000k 임계치 양방향 조절), banner((patch v0.2.4)), release-notes를 조합합니다.",
+            en: "Combines nodrip, batch, heading, cjk-bold, tilde-strike, code-theme (default vs), compact (32k–1000k bidirectional checkpoint tuning), banner, and release-notes.",
           },
         },
         {
-          title: { ko: "한국어 마크다운 파서 오류 수정", en: "CJK Markdown Parser Fixes" },
+          title: { ko: "antigravity.orig 백업 & 자동 서명", en: "antigravity.orig Backup & Codesign" },
           desc: {
-            ko: '**"강조"**에 처럼 볼드 직후 한글 조사가 붙으면 파싱이 풀리는 현상(cjk-bold)과 ~10ms 같은 단일 틸드가 취소선으로 깨지는 문제(tilde-strike)를 해결합니다.',
-            en: "Fixes CommonMark flanking failures when Korean particles follow **bold** spans and stops single ~ ranges from turning into strikethrough.",
+            ko: "대상 바이너리와 같은 디렉토리에 antigravity.orig 원본 백업을 유지(--restore 복구)하고 Linux FICLONE reflink 및 macOS ad-hoc codesign -f -s - 서명을 자동 수행합니다.",
+            en: "Stores antigravity.orig alongside the target binary (supporting --restore), leverages Linux FICLONE reflinks, and re-signs Mach-O outputs automatically.",
           },
         },
       ],
-      installCmd: "agy-cli-patch --patch nodrip,batch,heading,cjk-bold,tilde-strike",
-      cliBlockTitle: "agy-cli-patch --list && --patch",
-      cliSnippet: `$ agy-cli-patch --patch nodrip,batch,heading,cjk-bold,tilde-strike
-[scan] /usr/bin/agy (ELF64 x86_64, .gopclntab verified)
-  ✓ nodrip        : textDrip interval 16ms -> 0ms (patched 2 sites)
-  ✓ batch         : stream render flush -> turn-complete batch
-  ✓ heading       : hide raw '##' prefix in styled headings
-  ✓ cjk-bold      : allow Korean/CJK particle boundary after **...**
-  ✓ tilde-strike  : require ~~double tilde~~ for strikethrough
-[done] backup saved at ~/.local/share/agy-cli-patch/agy.orig`,
+      installCmd: "agy-cli-patch -p all --compact 180k -o agy-batch",
+      cliBlockTitle: "agy-cli-patch -p all --compact 180k -o agy-batch",
+      cliSnippet: `$ agy-cli-patch -p all --compact 180k -o agy-batch
+[*] 대상 바이너리: /usr/bin/antigravity (버전 1.5.7, ELF64 x86_64)
+[*] 원본 백업: /usr/bin/antigravity.orig (reflink)
+  ✓ nodrip        : textDrip 16ms 딜레이 제거
+  ✓ batch         : 응답 완료 시 마크다운 일괄 출력
+  ✓ heading       : '##' 헤딩 프리픽스 숨김
+  ✓ cjk-bold      : 볼드 뒤 한글 조사 구문 깨짐 수정
+  ✓ tilde-strike  : 단일 '~' 취소선 오인식 방지
+  ✓ code-theme    : 터미널 스킴 코드 블록 테마 -> vs
+  ✓ compact       : 자동 컴팩션 임계값 256k -> 180k
+  ✓ banner        : (patch v0.2.4) 배너 표기
+[+] 생성 완료: ~/.local/bin/agy-batch -> /usr/bin/agy-batch`,
       archNodes: [
-        "mmap(agy binary)",
-        "Parse ELF64 / Mach-O .gopclntab",
-        "Match x86_64/ARM64 Opcode Sig",
-        "In-place Byte Patch",
-        "Re-sign & Verify",
+        "mmap(antigravity binary)",
+        "ELF64 / Mach-O .gopclntab",
+        "x86_64 / ARM64 Signature",
+        "antigravity.orig + Patch",
+        "Symlink / codesign -f -s -",
       ],
       statusline: {
         type: "agy",
@@ -343,7 +350,7 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
         },
         row2: { provider: "gemini", p5: 19, t5: "3h04m", p7: 44, t7: "2d8h" },
         row3: { provider: "3p", p5: 4, t5: "4h18m", p7: 15, t7: "5d1h" },
-        row4: { pr: "#12", state: "merged", title: "v0.2.4 · compact 임계값 플래그 및 Mach-O codesign 대응" },
+        row4: { pr: "v0.2.4", state: "merged", title: "ARM64(Apple Silicon·Linux) 패치 확대 및 code-theme·compact 지원" },
       },
     },
     {
@@ -359,53 +366,57 @@ ts-gate             # Tailnet 전용 일시 포트 게이트 & 자동 TTL 매니
       repoUrl: "https://github.com/KyongSik-Yoon/agy-decision-lab",
       siteUrl: null,
       sub: {
-        ko: "Gemini Decisions API 안전 게이트·스웜 라우터·MCP 서버",
-        en: "Gemini Decisions API safety hooks, dynamic subagent router & Rust MCP",
+        ko: "Gemini Decisions API 안전 게이트·스웜 라우터·Rust MCP",
+        en: "3 native agy plugins (safety gate, stop audit, subagent router) & Rust MCP",
       },
       summary: {
-        ko: "Google Gemini Decisions 전용 모델(gemini-decision-1)을 Antigravity CLI에 통합해 PreToolUse 위험 명령 검문소, Stop 증분 diff 체크리스트 심사, 서브에이전트/스웜 모델 동적 라우팅, 초고속 Rust MCP 도구를 제공하는 하네스입니다.",
-        en: "Integrates gemini-decision-1 into Antigravity CLI with zero-latency PreToolUse safety gates, Stop diff checklist audits, dynamic subagent/swarm model routing, and a native Rust MCP server.",
+        ko: "gemini-decision-1 판별 모델을 Antigravity CLI 네이티브 플러그인 3종(decision · decision-stop · decision-subagent)과 로컬 stdio Rust MCP 서버(agy-decision-mcp)로 패키지화해 위험 명령 사전 차단, diff 체크리스트 심사, Gemini 4 10단계 서브에이전트 라우팅을 제공합니다.",
+        en: "Packages gemini-decision-1 into three standalone Antigravity CLI plugins (decision, decision-stop, decision-subagent) and a tokio/rmcp stdio server (agy-decision-mcp), separating API billing keys from main agy sessions.",
       },
       stack: ["Rust", "tokio", "rmcp", "Gemini Decisions API", "stdio MCP"],
       features: [
         {
-          title: { ko: "PreToolUse 무소음 안전 게이트", en: "Zero-Noise PreToolUse Safety Gate" },
+          title: { ko: "3대 독립 네이티브 플러그인 구성", en: "Three Standalone Native Plugins" },
           desc: {
-            ko: "일상적인 조회·빌드 명령은 0ms 패스스루하고, git push --force · rm -rf · 권한 상승 같은 고위험 명령만 감지해 차단(deny)하거나 사용자 확인(force_ask)을 띄웁니다.",
-            en: "Passes routine commands instantly at 0ms while intercepting destructive patterns like force-push or rm -rf via gemini-decision-1.",
+            ko: "decision(PreToolUse 0ms 패스스루 안전 게이트), decision-stop(Stop Git diff 증분 심사), decision-subagent(스폰 모델 라우팅)가 독립 플러그인과 config.env 키 분리로 동작합니다.",
+            en: "Splits into plugins/decision (PreToolUse 0ms fast-path + gate), plugins/decision-stop (incremental diff check), and plugins/decision-subagent with isolated XDG config.env keys.",
           },
         },
         {
-          title: { ko: "서브에이전트 & 스웜 동적 라우터", en: "Dynamic Subagent & Swarm Router" },
+          title: { ko: "Gemini 4 10단계 스웜·서브에이전트 라우터", en: "10-Tier Gemini 4 Subagent Router" },
           desc: {
-            ko: "메인 모델 프롬프트 캐시를 깨지 않으면서 invoke_subagent 및 swarm add 호출 시점에 작업 난이도를 평가해 Hydrogen / Argon / Carbon 모델과 reasoning_effort를 자동 배정합니다.",
-            en: "Classifies subagent and swarm briefs at spawn time to assign optimal model tier and reasoning effort without invalidating parent caches.",
+            ko: "레거시 agy-route REPL 없이 PreToolUse overwrite만으로 invoke_subagent 및 swarm add 호출 시 Gemini 4 Hydrogen·Argon·Carbon 10단계 모델과 추론 강도(low~xhigh)를 자동 주입합니다.",
+            en: "Injects 10-tier Hydrogen/Argon/Carbon models and reasoning effort via PreToolUse overwrite on invoke_subagent and swarm add without breaking parent prompt caches.",
           },
         },
         {
-          title: { ko: "Stop diff 심사 & Rust MCP 툴셋", en: "Stop Diff Audit & Rust MCP Tools" },
+          title: { ko: "agy-decision-mcp 5종 Rust MCP 도구", en: "5 Rust stdio MCP Tools" },
           desc: {
-            ko: "에이전트 턴 종료 시 Git diff를 단일 패스 체크리스트로 검증하고, workspace_git_digest · batch_code_context · scan_code_checklist MCP 도구를 제공합니다.",
-            en: "Audits staged/unstaged diffs on turn stop and exposes workspace_git_digest, batch_code_context, and scan_code_checklist over stdio MCP.",
+            ko: "gate_shell_command, evaluate_decisions, scan_code_checklist, workspace_git_digest, batch_code_context 5종 도구를 제공해 다중 저장소 Git 요약과 체크리스트 심사를 고속 처리합니다.",
+            en: "Exposes gate_shell_command, evaluate_decisions, scan_code_checklist, workspace_git_digest, and batch_code_context over tokio rmcp stdio MCP.",
           },
         },
       ],
-      installCmd: "agy-decision-hook status && agy-decision-hook subagent-on",
-      cliBlockTitle: "agy-decision-hook :: gate & subagent-router",
-      cliSnippet: `$ agy-decision-hook test-gate "git push --force origin main"
+      installCmd: "./scripts/install.sh",
+      cliBlockTitle: "agy-decision-hook :: gate, stop & subagent-router",
+      cliSnippet: `$ agy-decision-hook status
+Config        (XDG 설정·API 키):        ~/.config/agy-decision-lab/config.env (GEMINI_API_KEY: configured)
+PreToolUse    (명령 안전 검문소):       enabled (플러그인: decision)
+PreToolUse    (서브에이전트·스웜 라우터): enabled (플러그인: decision-subagent)
+Stop          (완료 체크리스트 검증):   enabled (플러그인: decision-stop)
+
+$ agy-decision-hook test-gate "git push --force origin main"
 decision=DENY  model=gemini-decision-1  latency=142ms
 reason: protected branch 'main' force-push blocked by PreToolUse policy
 
-$ agy-decision-hook status
-pre-tool-gate   : ON  (plugins/decision)
-stop-checklist  : ON  (plugins/decision-stop)
-subagent-router : ON  (Hydrogen/Argon/Carbon auto-tiering)`,
+$ agy-decision-hook test-subagent "Audit lock ordering across async channels" --kind swarm --workspace inherit
+route -> Gemini 4 Argon (High) · reason=concurrency audit requires multi-step reasoning`,
       archNodes: [
-        "CLI PreToolUse / Subagent Hook",
+        "PreToolUse / Stop Hook",
         "agy-decision-hook (Rust)",
         "gemini-decision-1 API",
-        "Allow / Deny / Model Override",
-        "agy-decision-mcp (stdio)",
+        "Allow / Deny / Model Overwrite",
+        "agy-decision-mcp (5 Tools)",
       ],
       statusline: {
         type: "agy",
@@ -420,7 +431,7 @@ subagent-router : ON  (Hydrogen/Argon/Carbon auto-tiering)`,
         },
         row2: { provider: "gemini", p5: 36, t5: "2h18m", p7: 58, t7: "3d1h" },
         row3: { provider: "3p", p5: 11, t5: "3h50m", p7: 27, t7: "4d9h" },
-        row4: { pr: "#27", state: "open", title: "swarm add 작업 샤딩 시 모델 오버라이드 일관성 검증" },
+        row4: { pr: "#31", state: "merged", title: "Hydrogen 10단계 동적 라우팅 및 레거시 REPL 계층 정리" },
       },
     },
     {
@@ -436,56 +447,58 @@ subagent-router : ON  (Hydrogen/Argon/Carbon auto-tiering)`,
       repoUrl: "https://github.com/KyongSik-Yoon/gemini-remote-linux",
       siteUrl: null,
       sub: {
-        ko: "Linux PC ↔ Gemini 모바일/웹 양방향 원격 데몬 (비공식)",
-        en: "Unofficial Gemini Desktop daemon for Linux (Shell, MCP & Wayland Computer Use)",
+        ko: "Linux PC ↔ Gemini 모바일·웹·데스크톱 양방향 원격 데몬 (비공식)",
+        en: "Unofficial Gemini Desktop daemon for Linux (Shell, MCP & Wayland/X11)",
       },
       summary: {
-        ko: "Linux 워크스테이션을 Gemini 모바일·웹 및 비공식 데스크톱 클라이언트와 연결해 로컬 워크스페이스 파일 조작, 셸 실행, MCP 브리지, Wayland/Hyprland GUI Computer Use까지 원격으로 구동하는 Go 데몬입니다.",
-        en: "Connects a Linux PC to Gemini Mobile, Web, and unofficial desktop clients over Google's bidirectional protocol for remote workspace files, shell tools, MCP bridges, and Wayland/X11 Computer Use.",
+        ko: "Linux 워크스테이션을 Gemini 모바일·웹 및 리눅스 비공식 Gemini 데스크톱 앱과 양방향 연결해 로컬 워크스페이스 파일 조작, 셸 실행, MCP 브리지, Wayland/Hyprland·X11 GUI Computer Use를 구동하는 Go 1.27.3 데몬입니다.",
+        en: "Connects Linux PCs to Gemini Mobile, Web, and unofficial Linux Gemini desktop clients in a single Go 1.27.3 binary for scoped workspace file tools, shell commands, MCP bridges, and Wayland/X11 Computer Use.",
       },
-      stack: ["Go 1.27", "Robin/Punctual Protocol", "Wayland / Hyprland", "stdio MCP"],
+      stack: ["Go 1.27.3", "Robin/Punctual Protocol", "Wayland / Hyprland & X11", "MIT"],
       features: [
         {
-          title: { ko: "양방향 실시간 스트림 & 프레즌스", en: "Bidirectional Stream & Presence" },
+          title: { ko: "모바일·웹·비공식 Linux 데스크톱 연동", en: "Mobile, Web & Unofficial Linux Client Sync" },
           desc: {
-            ko: "OAuth 로그인과 장치 등록 후 상주 데몬(serve)이 장시간 폴링·gRPC 스트림으로 연결 상태를 유지하며 모바일/웹 요청을 로컬 작업으로 중계합니다.",
-            en: "Maintains device registration, presence heartbeats, and long-lived streams to bridge mobile/web Gemini sessions to local Linux tools.",
+            ko: "장치 등록·프레즌스·핸드셰이크 세션 갱신으로 좀비 구독 없이 Android/iOS·웹·비공식 Linux 데스크톱 래퍼와 실시간 양방향 스트림을 유지합니다.",
+            en: "Maintains device registration, presence heartbeats, and handshake-safe bidirectional streams across Gemini Mobile, Web, and Linux desktop wrappers.",
           },
         },
         {
-          title: { ko: "워크스페이스 샌드박스 & 로컬 도구", en: "Workspace Sandbox & Local Tools" },
+          title: { ko: "로컬 툴 실행 & 외부 MCP 브리지", en: "Scoped File Tools & MCP Bridge" },
           desc: {
-            ko: "허용된 폴더만 등록(folders add)해 파일 읽기/쓰기, diff 치환, Grep 검색, 셸 명령을 안전하게 실행합니다.",
-            en: "Exposes scoped local directories for file edits, grep searches, and shell execution within explicitly allowed paths.",
+            ko: "허용된 폴더 내에서 셸·파일 편집(view_file 로컬 텍스트 직독 분기 포함)·Grep을 처리하며 내장 Git·Obsidian 및 외부 stdio MCP 서버를 연결합니다.",
+            en: "Runs scoped shell, grep, and file edits (with local text branching in view_file) alongside built-in git/obsidian and external stdio MCP servers.",
           },
         },
         {
-          title: { ko: "Wayland/Hyprland GUI Computer Use", en: "Wayland / X11 Computer Use" },
+          title: { ko: "Wayland / X11 GUI & systemd 상주", en: "Wayland/X11 GUI & systemd Service" },
           desc: {
-            ko: "grim 화면 캡처, wtype/ydotool 입력, hyprctl 창 제어를 조합해 리눅스 데스크톱 GUI 제어와 내장 Git·Obsidian MCP 연동을 지원합니다.",
-            en: "Supports screen capture and GUI automation via grim, wtype, ydotool, hyprctl (or X11 xdotool) plus built-in Git/Obsidian MCP servers.",
+            ko: "Wayland/Hyprland(hyprctl, grim, wtype, ydotool)와 X11(xdotool, import) GUI 제어(ui_control)를 지원하며 ./gemini-remote service install로 사용자 서비스 등록이 가능합니다.",
+            en: "Supports ui_control on both Hyprland/Wayland and X11 plus one-command user daemon installation via ./gemini-remote service install.",
           },
         },
       ],
-      installCmd: "./gemini-remote login && ./gemini-remote register && ./gemini-remote serve",
-      cliBlockTitle: "gemini-remote serve --status",
-      cliSnippet: `$ ./gemini-remote serve
+      installCmd: "./gemini-remote login && ./gemini-remote folders add ~/dev/git-repo && ./gemini-remote register && ./gemini-remote serve",
+      cliBlockTitle: "gemini-remote :: register & serve",
+      cliSnippet: `$ ./gemini-remote folders add ~/dev/git-repo
+$ ./gemini-remote register
+$ ./gemini-remote serve   # 또는 ./gemini-remote service install
 [auth]   OAuth credentials verified (device: omarchy-linux-01)
-[bridge] folders mounted: ~/dev/git-repo (rw), ~/notes (ro)
-[mcp]    attached: git-mcp, obsidian-mcp
-[gui]    compositor=Hyprland  capture=grim  input=wtype+ydotool
-[stream] connected to Gemini Gateway (Robin/Punctual RTT 41ms)`,
+[bridge] folders mounted: ~/dev/git-repo
+[mcp]    attached: git, obsidian (+ external stdio bridge)
+[gui]    compositor=Hyprland (capture=grim, input=wtype+ydotool)
+[stream] Robin/Punctual connected (Mobile / Web / Linux desktop wrapper)`,
       archNodes: [
-        "Gemini Mobile / Web",
+        "Gemini Mobile / Web / Desktop",
         "Cloud Gateway (Robin/Punctual)",
-        "gemini-remote (Go Daemon)",
+        "gemini-remote (Go 1.27.3)",
         "Local Shell · File · MCP",
-        "Wayland / Hyprland GUI",
+        "Wayland / Hyprland & X11 GUI",
       ],
       statusline: {
         type: "custom-gemini",
         row1: {
-          model: "gemini-remote[go1.27]",
+          model: "gemini-remote[go1.27.3]",
           proto: "Robin/Punctual",
           rttPct: 21,
           rttLabel: "41ms RTT",
@@ -500,8 +513,8 @@ subagent-router : ON  (Hydrogen/Argon/Carbon auto-tiering)`,
         },
         row3: {
           label: "wayland",
-          compositor: "Hyprland + grim + wtype",
-          mcp: "2 MCP servers",
+          compositor: "Hyprland + X11 ui_control",
+          mcp: "git + obsidian + stdio MCP",
         },
       },
     },
@@ -518,73 +531,81 @@ subagent-router : ON  (Hydrogen/Argon/Carbon auto-tiering)`,
       repoUrl: "https://github.com/KyongSik-Yoon/ts-gate",
       siteUrl: null,
       sub: {
-        ko: "Tailnet 전용 일시 리버스 프록시 게이트 매니저 (무의존성 Rust TUI)",
-        en: "Tailnet-only temporary reverse proxy gate manager with interactive TUI",
+        ko: "v0.1.0 · Linux·macOS Tailnet 전용 일시 포트 게이트 TUI/CLI",
+        en: "v0.1.0 · Tailnet-only temporary reverse proxy gate manager (Linux & macOS)",
       },
       summary: {
-        ko: "외부 공인 인터넷(tailscale funnel) 노출을 원천 차단하고 Tailscale tailnet 내부(tailscale serve)로만 로컬 포트를 일시 개방한 뒤, TTL 만료(기본 1시간)와 재부팅 시 자동 차단(boot-guard)을 보장하는 무의존성 Rust TUI/CLI 도구입니다.",
-        en: "Zero-dependency Rust TUI/CLI for opening temporary tailnet-only ports via tailscale serve. Blocks public funnel exposure, enforces TTL auto-expiry, and sweeps stale openings on boot.",
+        ko: "외부 공인 인터넷(tailscale funnel) 노출을 원천 차단하고 Tailscale tailnet 내부(tailscale serve)로만 로컬·내부망 포트를 일시 개방한 뒤, TTL 자동 만료(기본 1시간)와 재부팅 시 자동 회수(boot-guard)를 보장하는 Linux·macOS(x86_64/ARM64)용 무의존성 Rust TUI/CLI 도구(v0.1.0)입니다.",
+        en: "Zero-dependency Rust TUI/CLI (v0.1.0) for Linux & macOS (x86_64 & ARM64) that exposes temporary tailnet-only services via tailscale serve with automatic TTL expiry and reboot auto-close.",
       },
-      stack: ["Rust (std only)", "Tailscale Serve", "systemd-run TTL", "Interactive TUI"],
+      stack: ["Rust (std only)", "v0.1.0", "Linux & macOS", "Tailscale Serve"],
       features: [
         {
-          title: { ko: "Tailnet 전용 & Funnel 원천 차단", en: "Tailnet-Only · Funnel Blocked" },
+          title: { ko: "Tailnet 전용 & 외부 상시 포트 보호", en: "Tailnet-Only · External Port Guard" },
           desc: {
-            ko: "모든 개방 요청은 tailscale serve --bg 만 허용하며, 공인 인터넷 노출(funnel) 경로는 코드 레벨에서 거부합니다.",
-            en: "Permits only private tailnet exposure via tailscale serve while strictly disallowing public tailscale funnel routes.",
+            ko: "모든 개방은 tailscale serve --bg 만 허용해 공인 funnel 노출을 차단하며, ts-gate 밖에서 열린 기존 상시 포트(:443 등)는 절대 덮어쓰거나 닫지 않습니다.",
+            en: "Uses private tailscale serve --bg strictly without funnel support, and refuses to overwrite or close external always-on ports such as :443.",
           },
         },
         {
-          title: { ko: "자동 TTL 타이머 & Boot Guard", en: "TTL Auto-Expiry & Boot Guard" },
+          title: { ko: "크로스 플랫폼 TTL 타이머 & Boot Guard", en: "Cross-Platform TTL & Boot Guard" },
           desc: {
-            ko: "포트 개방 시 systemd-run --user 타이머가 자동 걸려 지정 시간이 지나면 닫히며, ts-gate-boot.service가 재부팅 직후 잔여 일시 포트를 전수 회수합니다.",
-            en: "Schedules user systemd timers to auto-close expired ports and runs sweep --boot at startup to close leftover gates.",
+            ko: "Linux(systemd-run --user + ts-gate-boot.service)와 macOS(만료 워커 + LaunchAgent plist) 양쪽에서 TTL 만료 시 자동 해제 및 재부팅 직후 sweep --boot 정리를 수행합니다.",
+            en: "Enforces TTL expiry and startup sweep --boot via systemd-run/user unit on Linux and background worker/LaunchAgent plist on macOS.",
           },
         },
         {
-          title: { ko: "기존 상시 서비스 보호 & 무의존성 TUI", en: "Always-On Protection & Zero-Dep TUI" },
+          title: { ko: "endpoints + leases 분리 & 무의존성 TUI", en: "0600 State Split & Raw ANSI TUI" },
           desc: {
-            ko: "외부 크레이트 없이 raw ANSI 터미널로 인터랙티브 TUI를 구동하며, 기존에 이미 서빙 중인 상시 포트(443/8443 등)와 충돌하지 않도록 보호합니다.",
-            en: "Renders an interactive raw-ANSI TUI with zero crates while guarding pre-existing always-on Tailscale serve ports.",
+            ko: "외부 크레이트 없는 raw ANSI TUI로 엔드포인트 추가/열기/닫기/URL 복사(OSC 52)를 다루며, 상태는 endpoints.json(0600)과 leases.json(0600)에 안전하게 저장합니다.",
+            en: "Drives a zero-crate ANSI TUI with OSC 52 clipboard copy while storing definitions in ~/.config/ts-gate/endpoints.json and active leases in ~/.local/state/ts-gate/leases.json.",
           },
         },
       ],
-      installCmd: "ts-gate open 8080 --ttl 2h && ts-gate list",
-      cliBlockTitle: "ts-gate list :: tailnet gates",
-      cliSnippet: `$ ts-gate open 8080 --ttl 2h
-opened tailnet gate https://omarchy.tailnet.ts.net:8080 -> 127.0.0.1:8080 (ttl 2h00m)
+      installCmd: "ts-gate add grafana http://127.0.0.1:3000 -p 3000 -t 1h --open && ts-gate list",
+      cliBlockTitle: "ts-gate v0.1.0 :: open, quick & list",
+      cliSnippet: `$ ts-gate add grafana http://127.0.0.1:3000 -p 3000 -t 1h --open
+[+] 개방 완료: https://omarchy.tailnet.ts.net:3000 (16:30 자동 해제)
+
+$ ts-gate quick 127.0.0.1:8080 -p 18080 -t 15m
+[+] 일회성 개방 완료: https://omarchy.tailnet.ts.net:18080 (15분 후 자동 해제)
 
 $ ts-gate list
-PORT   TARGET            MODE           TTL REMAINING   GUARD
-8080   127.0.0.1:8080    tailnet-serve  1h 58m 14s      systemd-timer
-443    127.0.0.1:8787    always-on      permanent       protected (collie)`,
+ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
+
+등록된 게이트:
+  ● grafana      :3000 -> 127.0.0.1:3000  |  열림 (남은 58분, 16:30 해제)
+    접속: https://omarchy.tailnet.ts.net:3000
+
+외부 상시 포트 (보호됨):
+  ◆ :443 -> 127.0.0.1:8787  (ts-gate 관리 대상 아님, 보호됨)`,
       archNodes: [
         "ts-gate CLI / Raw ANSI TUI",
-        "~/.config/ts-gate/state.json",
+        "endpoints.json & leases.json",
         "tailscale serve --bg (No Funnel)",
-        "systemd-run TTL Timer",
-        "ts-gate-boot.service Sweep",
+        "systemd-run / macOS TTL Worker",
+        "ts-gate-boot / LaunchAgent Sweep",
       ],
       statusline: {
         type: "custom-ts",
         row1: {
-          model: "ts-gate[rust-0deps]",
+          model: "ts-gate[v0.1.0]",
           mode: "tailnet-only",
           ttlPct: 68,
-          ttlLabel: "1h58m left",
+          ttlLabel: "58m left",
           funnel: "funnel: BLOCKED",
         },
         row2: {
           label: "gates",
           p5: 34,
-          t5: ":8080 → :8080 (2h)",
+          t5: ":3000 → :3000 (1h)",
           p7: 100,
           t7: ":443 collie protected",
         },
         row3: {
           label: "guard",
-          boot: "ts-gate-boot.service armed",
-          state: "state.json synced",
+          boot: "boot-guard armed",
+          state: "endpoints + leases synced",
         },
       },
     },
@@ -649,7 +670,7 @@ PORT   TARGET            MODE           TTL REMAINING   GUARD
     return ALL_ITEMS.find((item) => item.id === state.selectedId) || PROJECTS[0];
   }
 
-  function buildBarHtml(pct, width = 6) {
+  function buildBarHtml(pct, width = 6, tone = "usage") {
     const clamped = Math.max(0, Math.min(100, Math.round(pct)));
     const halfCells = Math.floor((clamped * width * 2 * 2 + 100) / 200);
     const full = Math.floor(halfCells / 2);
@@ -659,9 +680,17 @@ PORT   TARGET            MODE           TTL REMAINING   GUARD
     const empty = "·".repeat(Math.max(0, width - used));
 
     let colorClass = "c-blue";
-    if (clamped >= 90) colorClass = "c-red";
-    else if (clamped >= 70) colorClass = "c-orange";
-    else if (clamped >= 50) colorClass = "c-yellow";
+    if (tone === "health") {
+      if (clamped >= 70) colorClass = "c-green";
+      else if (clamped >= 40) colorClass = "c-teal";
+      else colorClass = "c-yellow";
+    } else if (clamped >= 90) {
+      colorClass = "c-red";
+    } else if (clamped >= 70) {
+      colorClass = "c-orange";
+    } else if (clamped >= 50) {
+      colorClass = "c-yellow";
+    }
 
     return `<span class="${colorClass}">${filled}</span><span class="c-muted">${empty}</span>`;
   }
@@ -1094,21 +1123,21 @@ PORT   TARGET            MODE           TTL REMAINING   GUARD
       logoHtml = renderCustomSvg(sl.type, state.active);
       rowsHtml = `
         <div class="statusline-row"><span class="c-teal">${esc(sl.row1.model)}</span> <span class="c-green">${esc(sl.row1.engine)}</span> <span class="c-dim">│</span> <span class="c-white">latency</span> ${buildBarHtml(sl.row1.rtfPct, 6)} <span class="c-white">${esc(sl.row1.rtfLabel)}</span> <span class="c-dim">│</span> <span class="c-cyan">${esc(sl.row1.target)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-teal">${esc(sl.row2.label)}</span> <span class="c-white">voice</span> ${buildBarHtml(sl.row2.p5, 6)} <span class="c-dim">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">floor</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-dim">${esc(sl.row2.t7)}</span></div>
+        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-teal">${esc(sl.row2.label)}</span> <span class="c-white">voice</span> ${buildBarHtml(sl.row2.p5, 6, "health")} <span class="c-dim">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">floor</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-dim">${esc(sl.row2.t7)}</span></div>
         <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-teal">${esc(sl.row3.label)}</span> <span class="c-green">${esc(sl.row3.host)}</span> <span class="c-dim">·</span> <span class="c-yellow">${esc(sl.row3.autoEnter)}</span> <span class="c-dim">·</span> <span class="c-white">${esc(sl.row3.vocab)}</span></div>
       `;
     } else if (sl.type === "custom-gemini") {
       logoHtml = renderCustomSvg(sl.type, state.active);
       rowsHtml = `
         <div class="statusline-row"><span class="c-gem-blue">${esc(sl.row1.model)}</span> <span class="c-cyan">${esc(sl.row1.proto)}</span> <span class="c-dim">│</span> <span class="c-white">rtt</span> ${buildBarHtml(sl.row1.rttPct, 6)} <span class="c-white">${esc(sl.row1.rttLabel)}</span> <span class="c-dim">│</span> <span class="c-green">${esc(sl.row1.host)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-gem-blue">${esc(sl.row2.label)}</span>  <span class="c-white">sync</span> ${buildBarHtml(sl.row2.p5, 6)} <span class="c-green">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">mounts</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-white">${esc(sl.row2.t7)}</span></div>
+        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-gem-blue">${esc(sl.row2.label)}</span>  <span class="c-white">sync</span> ${buildBarHtml(sl.row2.p5, 6, "health")} <span class="c-green">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">mounts</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-white">${esc(sl.row2.t7)}</span></div>
         <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-gem-purple">${esc(sl.row3.label)}</span> <span class="c-white">${esc(sl.row3.compositor)}</span> <span class="c-dim">·</span> <span class="c-teal">${esc(sl.row3.mcp)}</span></div>
       `;
     } else if (sl.type === "custom-ts") {
       logoHtml = renderCustomSvg(sl.type, state.active);
       rowsHtml = `
         <div class="statusline-row"><span class="c-teal">${esc(sl.row1.model)}</span> <span class="c-green">${esc(sl.row1.mode)}</span> <span class="c-dim">│</span> <span class="c-white">ttl</span> ${buildBarHtml(sl.row1.ttlPct, 6)} <span class="c-white">${esc(sl.row1.ttlLabel)}</span> <span class="c-dim">│</span> <span class="c-red">${esc(sl.row1.funnel)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-teal">${esc(sl.row2.label)}</span> <span class="c-white">temp</span> ${buildBarHtml(sl.row2.p5, 6)} <span class="c-white">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">keep</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-green">${esc(sl.row2.t7)}</span></div>
+        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-teal">${esc(sl.row2.label)}</span> <span class="c-white">temp</span> ${buildBarHtml(sl.row2.p5, 6)} <span class="c-white">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">keep</span> ${buildBarHtml(sl.row2.p7, 6, "health")} <span class="c-green">${esc(sl.row2.t7)}</span></div>
         <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-teal">${esc(sl.row3.label)}</span> <span class="c-green">${esc(sl.row3.boot)}</span> <span class="c-dim">·</span> <span class="c-dim">${esc(sl.row3.state)}</span></div>
       `;
     } else {

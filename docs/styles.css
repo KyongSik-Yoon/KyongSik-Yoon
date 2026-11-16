@@ -143,6 +143,12 @@ input {
   font-size: 13px;
   letter-spacing: 0.04em;
   color: var(--text-bright);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.github-label-short {
+  display: none;
 }
 
 .brand-wordmark:hover {
@@ -729,6 +735,13 @@ input {
   color: var(--text-muted);
 }
 
+.term-box-header > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .copy-btn {
   display: inline-flex;
   align-items: center;
@@ -740,6 +753,8 @@ input {
   color: var(--text-muted);
   font-size: 10.5px;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .copy-btn:hover {
@@ -760,7 +775,7 @@ input {
 /* 기능 리스트 */
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
   gap: 10px;
 }
 
@@ -936,7 +951,7 @@ input {
   font-size: 11.5px;
   line-height: 1.42;
   flex-shrink: 0;
-  overflow-x: auto;
+  overflow: hidden;
 }
 
 .statusline-logo-slot {
@@ -959,12 +974,18 @@ input {
   flex-direction: column;
   min-width: 0;
   flex: 1 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.statusline-rows::-webkit-scrollbar {
+  display: none;
 }
 
 .statusline-row {
   white-space: pre;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: max-content;
 }
 
 /* ── Clawd 상태바 3D 네이티브 벡터 마스코트 키프레임 (collie 패치 원문 기반) ── */
@@ -1296,11 +1317,12 @@ svg[data-active] .custom-logo-pulse {
 
   .herdr-sidebar {
     position: fixed;
-    top: var(--topbar-height);
+    top: 0;
     left: 0;
     bottom: 0;
-    z-index: 40;
-    width: 280px;
+    z-index: 50;
+    width: min(286px, 84vw);
+    padding-top: 12px;
     border-radius: 0 8px 8px 0;
     transform: translateX(-105%);
     transition: transform 0.2s ease;
@@ -1313,9 +1335,9 @@ svg[data-active] .custom-logo-pulse {
 
   .sidebar-backdrop {
     position: fixed;
-    inset: var(--topbar-height) 0 0 0;
+    inset: 0;
     background: rgba(5, 7, 11, 0.65);
-    z-index: 30;
+    z-index: 40;
   }
 
   .pane-branch-chip {
@@ -1339,5 +1361,139 @@ svg[data-active] .custom-logo-pulse {
   .statusline-logo-slot svg {
     width: 30px;
     height: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .herdr-topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 6px 8px;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .pill-btn {
+    padding: 3px 8px;
+    font-size: 10.5px;
+  }
+
+  .github-label-full {
+    display: none;
+  }
+
+  .github-label-short {
+    display: inline;
+  }
+
+  .topbar-tabs {
+    order: 3;
+    flex: 1 0 100%;
+    width: 100%;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 5px;
+    gap: 4px;
+  }
+
+  .tab-chip {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .pane-border-header {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .pane-divider,
+  .pane-cwd {
+    display: none;
+  }
+
+  .pane-branch-chip {
+    display: inline;
+    font-size: 10.5px;
+  }
+
+  .pane-action-btn {
+    padding: 3px 8px;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+
+  .terminal-scroll {
+    padding: 12px;
+  }
+
+  .terminal-content {
+    gap: 14px;
+    font-size: 12.5px;
+  }
+
+  .term-cmd-echo {
+    font-size: 11px;
+    gap: 4px 6px;
+  }
+
+  .term-cmd-text {
+    word-break: break-word;
+  }
+
+  .term-project-title {
+    font-size: 18px;
+  }
+
+  .term-summary {
+    font-size: 13.5px;
+  }
+
+  .term-pre {
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .arch-flow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .arch-node {
+    text-align: center;
+  }
+
+  .arch-arrow {
+    align-self: center;
+    transform: rotate(90deg);
+    line-height: 1;
+    font-size: 11px;
+  }
+
+  .profile-header-card {
+    gap: 12px;
+  }
+
+  .profile-avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .terminal-prompt-bar {
+    padding: 6px 10px;
+  }
+
+  .statusline-dock {
+    padding: 6px 10px;
+    gap: 8px;
+    font-size: 10px;
+    line-height: 1.45;
   }
 }
