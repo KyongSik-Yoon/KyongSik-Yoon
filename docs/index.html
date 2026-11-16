@@ -38,6 +38,9 @@
         if (bar) document.querySelector('meta[name="theme-color"]').setAttribute("content", bar);
       })();
     </script>
+    <!-- ?v= 는 각 파일 내용의 sha1 앞 8자다. Pages 는 모든 파일을 10분 캐시하므로, 버전이 없으면
+         새 index.html 이 캐시된 옛 app.js·styles.css 와 섞여 깨진 화면이 나온다.
+         css/js 를 고치면 그 파일의 ?v= 값도 함께 바꾼다. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -45,8 +48,8 @@
       rel="stylesheet"
     />
     <link rel="preload" href="./assets/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="./hangul.css" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./hangul.css?v=280c8111" />
+    <link rel="stylesheet" href="./styles.css?v=39110d1b" />
   </head>
   <body>
     <!-- ghostty 창: 뷰포트를 셀(cols × rows) 단위로 잘라 쓰고 남는 픽셀은 창 여백이 된다 -->
@@ -238,8 +241,8 @@
       </div>
     </noscript>
 
-    <script src="./data.js" defer></script>
-    <script src="./captures.js" defer></script>
-    <script src="./app.js" defer></script>
+    <script src="./data.js?v=724bf9a5" defer></script>
+    <script src="./captures.js?v=e0490ad7" defer></script>
+    <script src="./app.js?v=8ee18d5f" defer></script>
   </body>
 </html>
