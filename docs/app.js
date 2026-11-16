@@ -1,655 +1,119 @@
+/* The engine: a ghostty window cut into cells, a herdr workspace laid out inside it.
+   Content lives in data.js, captured terminal output in captures.js. */
 (() => {
   "use strict";
 
-  const CLAWD_BODY_PATH =
-    "M8 11H34V19H38V23H34V31H31.5V27H30V31H27.5V27H14.5V31H12V27H10.5V31H8V23H4V19H8Z";
-  const AGY_ARCH_PATH =
-    "M89.6992 93.695C94.3659 97.195 101.366 94.8617 94.9492 88.445C75.6992 69.7783 79.7825 18.445 55.8659 18.445C31.9492 18.445 36.0325 69.7783 16.7825 88.445C9.78251 95.445 17.3658 97.195 22.0325 93.695C40.1159 81.445 38.9492 59.8617 55.8659 59.8617C72.7825 59.8617 71.6159 81.445 89.6992 93.695Z";
+  const { TABS, PROFILE_ENTRY, PROJECTS, CLAWD_BODY_PATH, AGY_ARCH_PATH } = window.HERDR_DATA;
+  const CAPTURES = window.HERDR_CAPTURES || {};
+  const ALL_ITEMS = [PROFILE_ENTRY, ...PROJECTS];
+  const PANES = TABS.map((tab) => tab.id);
+  const THEMES = ["tokyo-night", "paper", "amber", "phosphor"];
+  const THEME_COLOR = { "tokyo-night": "#0b0d12", paper: "#fafafa", amber: "#0c0802", phosphor: "#020a05" };
+  const SIDE_COLS = 32;
+  const SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+
+  const root = document.documentElement;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const $ = (id) => document.getElementById(id);
+
+  const store = {
+    get(key) {
+      try {
+        return window.localStorage.getItem(`herdr.${key}`);
+      } catch (e) {
+        return null;
+      }
+    },
+    set(key, value) {
+      try {
+        window.localStorage.setItem(`herdr.${key}`, value);
+      } catch (e) {
+        /* private mode: the choice just lasts for this visit */
+      }
+    },
+  };
 
   /** @typedef {"ko" | "en"} Lang */
 
-  const TABS = [
-    { id: "overview", num: "1", ko: "overview", en: "overview" },
-    { id: "demo", num: "2", ko: "cli · demo", en: "cli · demo" },
-    { id: "architecture", num: "3", ko: "architecture", en: "architecture" },
-  ];
-
-  const PROFILE_ENTRY = {
-    id: "profile",
-    slug: "profile",
-    kind: "profile",
-    name: "KyongSik Yoon",
-    badge: "herdr",
-    badgeClass: "badge-custom",
-    cwd: "~/KyongSik-Yoon",
-    branch: "main",
-    agent: "herdr",
-    repoUrl: "https://github.com/KyongSik-Yoon/KyongSik-Yoon",
-    siteUrl: "https://ksyoon.com/",
-    sub: { ko: "프로필 · AI 사용량 카드", en: "Profile · AI usage telemetry" },
-    summary: {
-      ko: "Claude Code, Antigravity CLI(agy), Gemini, Tailscale 및 온디바이스 음성 AI를 일상 워크플로우에 맞게 직접 튜닝하고 확장하는 개발자 KyongSik Yoon(sam)의 작업실입니다.",
-      en: "Workspace of KyongSik Yoon (sam), building harness plugins, binary patchers, safety gates, remote daemons, and on-device tools around Claude Code, Antigravity CLI, Gemini, and Tailscale.",
-    },
-    stack: ["Kotlin", "Rust", "Go", "TypeScript", "Linux / Wayland", "Android NPU"],
-    features: [
-      {
-        title: { ko: "AI 하네스 & 터미널 UX 엔지니어링", en: "AI Harness & Terminal UX" },
-        desc: {
-          ko: "herdr v0.9.5 멀티플렉서 환경 위에서 Claude Code(cc-desktop-mod v0.81.2)와 Antigravity CLI(agy-cli-patch v0.2.4)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조합니다.",
-          en: "Customizes Claude Code (cc-desktop-mod v0.81.2) and Antigravity CLI (agy-cli-patch v0.2.4) rendering, statuslines, and side panes inside herdr v0.9.5.",
-        },
-      },
-      {
-        title: { ko: "안전 게이트 & 모델 오케스트레이션", en: "Safety Gates & Model Routing" },
-        desc: {
-          ko: "Gemini Decisions API 기반 3대 독립 플러그인(decision · decision-stop · decision-subagent)으로 위험 명령 차단, diff 체크리스트 심사, Gemini 4 10단계 동적 모델 라우팅을 수행합니다.",
-          en: "Runs three native plugins (decision, decision-stop, decision-subagent) for 0ms shell safety gating, diff audits, and 10-tier Gemini 4 subagent/swarm routing.",
-        },
-      },
-      {
-        title: { ko: "크로스 디바이스 연결 & 프라이버시", en: "Cross-Device Bridge & Privacy" },
-        desc: {
-          ko: "Tailscale 기반 임시 포트 게이트(ts-gate v0.1.0), Linux 원격 데몬(gemini-remote-linux), 온디바이스 음성 받아쓰기(soksak + soksak-daemon)로 안전한 개인 개발 환경을 구축합니다.",
-          en: "Connects Android, Linux desktops, and tailnet services privately via ts-gate v0.1.0, gemini-remote-linux, and on-device soksak.",
-        },
-      },
-    ],
-    installCmd: "git clone https://github.com/KyongSik-Yoon/KyongSik-Yoon.git",
-    cliBlockTitle: "workspace-index.sh",
-    cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "cc-desktop|soksak|agy-|gemini-remote|ts-gate"
-cc-desktop-mod      # v0.81.2 · Claude Code 데스크톱 스타일 플러그인 스위트
-soksak              # Android 온디바이스 한국어/개발용어 받아쓰기 + Rust PC 데몬
-agy-cli-patch       # v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처
-agy-decision-lab    # Gemini Decisions API 안전 게이트·스웜 라우터·5종 MCP
-gemini-remote-linux # Go 1.27.3 · Linux PC ↔ Gemini 모바일/웹/데스크톱 원격 데몬
-ts-gate             # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이트 TUI/CLI`,
-    archNodes: [
-      "Android (soksak)",
-      "Tailscale Mesh (ts-gate)",
-      "Herdr v0.9.5 + Collie",
-      "Claude / Antigravity CLI",
-      "Decision Gate & Plugins",
-    ],
-    statusline: {
-      type: "custom-herdr",
-      row1: {
-        model: "herdr[v0.9.5]",
-        tag: "IME+screen",
-        ctxPct: 38,
-        dir: "~/KyongSik-Yoon",
-        branch: "main",
-        extra: "6 spaces active",
-      },
-      row2: { label: "claude", p5: 18, t5: "3h12m", p7: 45, t7: "2d0h", extra: "cc-desktop-mod v0.81.2" },
-      row3: { label: "gemini", p5: 24, t5: "2h45m", p7: 60, t7: "3d4h", extra: "agy-cli-patch v0.2.4 · decision-lab" },
-    },
-  };
-
-  const PROJECTS = [
-    {
-      id: "cc-desktop-mod",
-      slug: "cc-desktop-mod",
-      kind: "claude",
-      name: "cc-desktop-mod",
-      badge: "claude",
-      badgeClass: "badge-claude",
-      cwd: "~/dev/git-repo/cc-desktop-mod",
-      branch: "main",
-      agent: "claude",
-      repoUrl: "https://github.com/KyongSik-Yoon/cc-desktop-mod",
-      siteUrl: "https://kyongsik-yoon.github.io/cc-desktop-mod/",
-      sub: {
-        ko: "v0.81.2 · Claude Code 데스크톱 UX 플러그인 스위트",
-        en: "v0.81.2 · Claude Desktop UI mod & side-pane suite",
-      },
-      summary: {
-        ko: "Claude Code(>=2.1.323) 터미널 UI를 데스크톱 앱의 Code 탭 감각(프롬프트 말풍선, 상단 Progress Band, 접히는 도구 호출, 마크다운·Mermaid 렌더링, 줄 댓글 Diff·미리보기 패인)으로 탈바꿈시키는 플러그인 마켓플레이스(v0.81.2)입니다.",
-        en: "Transforms Claude Code (>=2.1.323) terminal UI into a Claude Desktop workspace with prompt bubbles, live Progress Band, folded tool runs, Mermaid/table rendering, and inline line-comment diff/preview panes (v0.81.2).",
-      },
-      stack: ["TypeScript", "v0.81.2", "Claude Code >=2.1.323", "MIT"],
-      features: [
-        {
-          title: { ko: "데스크톱 말풍선 & Progress Band", en: "Prompt Bubbles & Progress Band" },
-          desc: {
-            ko: "입력 프롬프트를 액센트 말풍선으로 구분하고, 작업 중 현재 스텝·CPU/경과시간·PR 체크 칩(#12 ✓ 5/5)·컨텍스트(◑ 62%)·백그라운드 태스크를 상단 밴드에 표시합니다.",
-            en: "Styles prompts as accented bubbles while pinning current step, running process CPU/time, PR check chips, context usage, and background tasks.",
-          },
-        },
-        {
-          title: { ko: "줄 댓글(Line Comments) · Diff & 미리보기 패인", en: "Line Comments in Diff, Preview & Plan" },
-          desc: {
-            ko: "/desk-diff 줄 단위 코멘트는 물론, /desk-preview(단축키 c)와 desk-plan 승인 카드(3)에서 계획·마크다운 문서 라인별 댓글을 패널 전폭 입력칸으로 작성해 다음 프롬프트에 실어 보냅니다.",
-            en: "Write inline line/range comments in /desk-diff, Markdown preview (/desk-preview with 'c'), or desk-plan approval cards ('3') via full-width comment fields synced into your next prompt.",
-          },
-        },
-        {
-          title: { ko: "통합 사이드 패인 & 마켓플레이스 5종", en: "Integrated Panes & 5 Marketplace Plugins" },
-          desc: {
-            ko: "desk-look(/desk-pr GitHub·GitLab 머지, /desk-tasks, /desk-context, /desk-monitor)에 더해 desk-plan, desk-review(/simplify→/code-review), desk-asana, desk-slack 4종을 함께 제공합니다.",
-            en: "Ships desk-look (/desk-pr, /desk-tasks, /desk-context, Linux /desk-monitor) plus separate desk-plan, desk-review, desk-asana, and desk-slack plugins.",
-          },
-        },
-      ],
-      installCmd: "/plugin install desk-look --marketplace KyongSik-Yoon/cc-desktop-mod",
-      cliBlockTitle: "claude-code :: desk-look v0.81.2",
-      cliSnippet: `/plugin install desk-look --marketplace KyongSik-Yoon/cc-desktop-mod
-/plugin install desk-plan@cc-desktop-mod
-/plugin install desk-review@cc-desktop-mod
-/plugin install desk-asana@cc-desktop-mod
-/plugin install desk-slack@cc-desktop-mod`,
-      simPreview: {
-        prompt: "❯ cc-desktop-mod v0.81.2 줄 댓글과 미리보기 패인 구조 정리해줘",
-        fold: "▸ Ran 2 commands, read 4 files ›  (src/panes/diff.ts, src/panes/preview.ts)",
-        answer: [
-          "┌────────────────┐      ┌──────────────────────┐",
-          "│ Claude Hook    │─────▶│ Desk Look Band v0.81 │",
-          "└────────────────┘      └──────────┬───────────┘",
-          "                                   ▼",
-          "       [/desk-diff & /desk-preview Line Comments]",
-        ].join("\n"),
-        band: "● step 3/3 · main · ctx ◑ 42% · PR #88 ✓ · 0 bg jobs",
-      },
-      archNodes: [
-        "Claude Code >=2.1.323",
-        "desk-look v0.81.2 Renderer",
-        "Bubble / Fold / Line Comments",
-        "desk-plan · review · asana · slack",
-      ],
-      statusline: {
-        type: "claude",
-        row1: {
-          model: "opus-5",
-          effort: "high",
-          dir: "cc-desktop-mod",
-          branch: "main*",
-          ahead: 1,
-          ctxPct: 42,
-          duration: "18m",
-        },
-        row2: {
-          provider: "claude",
-          p5: 18,
-          t5: "3h12m",
-          p7: 45,
-          t7: "2d4h",
-          scopedName: "fable",
-          scopedPct: 12,
-          advisorCalls: 3,
-          advisorTokens: "4.2k",
-        },
-        row3: {
-          provider: "codex",
-          p5: 8,
-          t5: "1h40m",
-          p7: 31,
-          t7: "4d1h",
-        },
-      },
-    },
-    {
-      id: "soksak",
-      slug: "soksak",
-      kind: "custom-soksak",
-      name: "soksak",
-      badge: "whisper-npu",
-      badgeClass: "badge-custom",
-      cwd: "~/dev/git-repo/soksak",
-      branch: "main",
-      agent: "soksak",
-      repoUrl: "https://github.com/KyongSik-Yoon/soksak",
-      siteUrl: "https://soksak.ksyoon.com/",
-      sub: {
-        ko: "속삭 — Android 온디바이스 한국어 + 개발용어 음성 받아쓰기",
-        en: "Soksak — On-device Korean + dev-jargon Android voice dictation",
-      },
-      summary: {
-        ko: "음성을 서버로 전혀 보내지 않고 기기 내부(whisper.cpp CPU 또는 Qualcomm QNN NPU)에서 한국어·영어 개발 용어를 즉시 받아써 활성 입력창이나 Tailscale 무의존성 Rust 데몬(soksak-daemon)을 거쳐 PC 클립보드에 꽂아주는 Android 앱입니다.",
-        en: "100% offline Android voice dictation forked from OpenWispr. Recognizes mixed Korean/English tech terms via whisper.cpp or Qualcomm NPU and optionally relays transcripts over Tailscale to soksak-daemon.",
-      },
-      stack: ["Kotlin", "C++", "whisper.cpp", "sherpa-onnx + QNN", "Rust daemon (std)"],
-      features: [
-        {
-          title: { ko: "플로팅 버블 & 자동 엔터(⏎)", en: "Floating Bubble & Auto-Enter (⏎)" },
-          desc: {
-            ko: "접근성 서비스로 포커스를 빼앗지 않고 글을 삽입하며, 1~5초 후 Enter를 눌러 주는 자동 엔터 링(버블 터치 시 취소)으로 모바일 에이전트 프롬프트를 손대지 않고 보냅니다.",
-            en: "Injects text via AccessibilityService without stealing focus, featuring an optional 1–5s auto-enter ring countdown (tap bubble to cancel).",
-          },
-        },
-        {
-          title: { ko: "CAM++ · VoxLock & Snapdragon NPU", en: "CAM++ VoxLock & SM8850/SM8750 NPU" },
-          desc: {
-            ko: "내 목소리 등록(CAM++)과 VoxLock으로 주변 TV·타인 음성을 분리하며, Snapdragon 8 Elite Gen 5(SM8850)와 Snapdragon 8 Elite(SM8750) 실기기에서 Large v3 Turbo NPU를 정식 지원합니다.",
-            en: "Filters speaker noise with CAM++ and VoxLock, running Whisper Large v3 Turbo natively on Qualcomm NPU across both SM8850 and verified SM8750 devices.",
-          },
-        },
-        {
-          title: { ko: "Tailscale PC 직송 · 프라이버시 데몬", en: "soksak-daemon (:48620) & soksak-paste" },
-          desc: {
-            ko: "무의존성 Rust 데몬(포트 48620)이 Tailscale 망과 연동 코드로 PC 클립보드에 텍스트를 수신(로그에 발화 내용 미기록)하며, Hyprland 한글 IME 깨짐을 막는 soksak-paste를 지원합니다.",
-            en: "Zero-dependency Rust daemon on Tailscale port 48620 relays clipboard text (never logging content) with soksak-paste for IME-safe Hyprland input.",
-          },
-        },
-      ],
-      installCmd: "soksak-daemon pair && systemctl --user enable --now soksak-daemon",
-      cliBlockTitle: "soksak-daemon :: pair & tailnet relay (:48620)",
-      cliSnippet: `$ soksak-daemon pair
-In Soksak: Settings -> Send to PC
-  PC address    100.64.0.42:48620
-  Pairing code  7482-9103
-
-$ soksak-daemon
-listening on port 48620 (Tailscale only); run \`soksak-daemon pair\` for the pairing code
-
-$ soksak-daemon send 127.0.0.1:48620 "시험"   # local relay check (text not logged)`,
-      archNodes: [
-        "Mic AudioRecord",
-        "CAM++ / VoxLock Filter",
-        "whisper.cpp / QNN NPU",
-        "Dev Alias Correction",
-        "Android Input / soksak-daemon :48620",
-      ],
-      statusline: {
-        type: "custom-soksak",
-        row1: {
-          model: "whisper-v3-turbo[qnn-npu]",
-          engine: "SM8850 · SM8750",
-          rtfPct: 16,
-          rtfLabel: "0.16x RTF",
-          target: "android → soksak-daemon",
-        },
-        row2: {
-          label: "voxlock",
-          p5: 94,
-          t5: "CAM++ locked",
-          p7: 22,
-          t7: "noise gate",
-        },
-        row3: {
-          label: "tailnet",
-          host: "sam@omarchy:48620",
-          autoEnter: "auto-⏎ 2.0s",
-          vocab: "Korean + dev aliases",
-        },
-      },
-    },
-    {
-      id: "agy-cli-patch",
-      slug: "agy-cli-patch",
-      kind: "agy",
-      name: "agy-cli-patch",
-      badge: "agy",
-      badgeClass: "badge-agy",
-      cwd: "~/dev/git-repo/agy-cli-patch",
-      branch: "main",
-      agent: "agy",
-      repoUrl: "https://github.com/KyongSik-Yoon/agy-cli-patch",
-      siteUrl: "https://agy-cli-patch.ksyoon.com/",
-      sub: {
-        ko: "v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처",
-        en: "v0.2.4 · 9-patch zero-dependency binary patcher for Antigravity CLI",
-      },
-      summary: {
-        ko: "Antigravity CLI(agy — Linux & macOS, x86_64 & ARM64)의 ELF64/Mach-O .gopclntab 심볼과 기계어 시그니처를 mmap으로 탐색해 스트리밍·CJK 마크다운·코드 테마·컴팩션 임계치 등 9종 패치를 적용하는 무의존성 Rust TUI/CLI 도구(v0.2.4)입니다.",
-        en: "Zero-dependency Rust TUI/CLI binary patcher (v0.2.4) for Antigravity CLI across Linux & macOS (x86_64 & ARM64). Scans .gopclntab and opcode signatures via mmap to apply 9 modular patches with automatic backup and Mach-O re-signing.",
-      },
-      stack: ["Rust (std only)", "v0.2.4", "ELF64 / Mach-O 64", "x86_64 & ARM64"],
-      features: [
-        {
-          title: { ko: "대화형 3단계 TUI & 동적 시그니처 스캔", en: "Interactive TUI & .gopclntab Scan" },
-          desc: {
-            ko: "인자 없이 실행하면 raw ANSI 3단계 TUI로 패치 가능 여부를 사전 대조하며, --preset은 agy-batch·agy-nodrip 2종을 자동 갱신합니다(Apple Silicon 9종 전체 / Linux ARM64 7종 지원).",
-            en: "Launches a 3-step raw-ANSI TUI when invoked without args, pre-checks opcode compatibility, and offers --preset for agy-batch / agy-nodrip (all 9 patches on Apple Silicon, 7 on Linux ARM64).",
-          },
-        },
-        {
-          title: { ko: "전체 9종 모듈형 바이너리 패치", en: "All 9 Modular Patches (-p)" },
-          desc: {
-            ko: "nodrip, batch, heading, cjk-bold, tilde-strike, code-theme(흐린 native→vs/bw 등 교체), compact(32k~1000k 임계치 양방향 조절), banner((patch v0.2.4)), release-notes를 조합합니다.",
-            en: "Combines nodrip, batch, heading, cjk-bold, tilde-strike, code-theme (default vs), compact (32k–1000k bidirectional checkpoint tuning), banner, and release-notes.",
-          },
-        },
-        {
-          title: { ko: "antigravity.orig 백업 & 자동 서명", en: "antigravity.orig Backup & Codesign" },
-          desc: {
-            ko: "대상 바이너리와 같은 디렉토리에 antigravity.orig 원본 백업을 유지(--restore 복구)하고 Linux FICLONE reflink 및 macOS ad-hoc codesign -f -s - 서명을 자동 수행합니다.",
-            en: "Stores antigravity.orig alongside the target binary (supporting --restore), leverages Linux FICLONE reflinks, and re-signs Mach-O outputs automatically.",
-          },
-        },
-      ],
-      installCmd: "agy-cli-patch -p all --compact 180k -o agy-batch",
-      cliBlockTitle: "agy-cli-patch -p all --compact 180k -o agy-batch",
-      cliSnippet: `$ agy-cli-patch -p all --compact 180k -o agy-batch
-[*] 대상 바이너리: /usr/bin/antigravity (버전 1.5.7, ELF64 x86_64)
-[*] 원본 백업: /usr/bin/antigravity.orig (reflink)
-  ✓ nodrip        : textDrip 16ms 딜레이 제거
-  ✓ batch         : 응답 완료 시 마크다운 일괄 출력
-  ✓ heading       : '##' 헤딩 프리픽스 숨김
-  ✓ cjk-bold      : 볼드 뒤 한글 조사 구문 깨짐 수정
-  ✓ tilde-strike  : 단일 '~' 취소선 오인식 방지
-  ✓ code-theme    : 터미널 스킴 코드 블록 테마 -> vs
-  ✓ compact       : 자동 컴팩션 임계값 256k -> 180k
-  ✓ banner        : (patch v0.2.4) 배너 표기
-[+] 생성 완료: ~/.local/bin/agy-batch -> /usr/bin/agy-batch`,
-      archNodes: [
-        "mmap(antigravity binary)",
-        "ELF64 / Mach-O .gopclntab",
-        "x86_64 / ARM64 Signature",
-        "antigravity.orig + Patch",
-        "Symlink / codesign -f -s -",
-      ],
-      statusline: {
-        type: "agy",
-        row1: {
-          model: "orchestrator-carbon[1m]",
-          effort: "high",
-          dir: "agy-cli-patch",
-          branch: "main",
-          ctxPct: 31,
-          duration: "11m",
-        },
-        row2: { provider: "gemini", p5: 19, t5: "3h04m", p7: 44, t7: "2d8h" },
-        row3: { provider: "3p", p5: 4, t5: "4h18m", p7: 15, t7: "5d1h" },
-        row4: { pr: "v0.2.4", state: "merged", title: "ARM64(Apple Silicon·Linux) 패치 확대 및 code-theme·compact 지원" },
-      },
-    },
-    {
-      id: "agy-decision-lab",
-      slug: "agy-decision-lab",
-      kind: "agy",
-      name: "agy-decision-lab",
-      badge: "agy",
-      badgeClass: "badge-agy",
-      cwd: "~/dev/git-repo/agy-decision-lab",
-      branch: "main",
-      agent: "agy",
-      repoUrl: "https://github.com/KyongSik-Yoon/agy-decision-lab",
-      siteUrl: null,
-      sub: {
-        ko: "Gemini Decisions API 안전 게이트·스웜 라우터·Rust MCP",
-        en: "3 native agy plugins (safety gate, stop audit, subagent router) & Rust MCP",
-      },
-      summary: {
-        ko: "gemini-decision-1 판별 모델을 Antigravity CLI 네이티브 플러그인 3종(decision · decision-stop · decision-subagent)과 로컬 stdio Rust MCP 서버(agy-decision-mcp)로 패키지화해 위험 명령 사전 차단, diff 체크리스트 심사, Gemini 4 10단계 서브에이전트 라우팅을 제공합니다.",
-        en: "Packages gemini-decision-1 into three standalone Antigravity CLI plugins (decision, decision-stop, decision-subagent) and a tokio/rmcp stdio server (agy-decision-mcp), separating API billing keys from main agy sessions.",
-      },
-      stack: ["Rust", "tokio", "rmcp", "Gemini Decisions API", "stdio MCP"],
-      features: [
-        {
-          title: { ko: "3대 독립 네이티브 플러그인 구성", en: "Three Standalone Native Plugins" },
-          desc: {
-            ko: "decision(PreToolUse 0ms 패스스루 안전 게이트), decision-stop(Stop Git diff 증분 심사), decision-subagent(스폰 모델 라우팅)가 독립 플러그인과 config.env 키 분리로 동작합니다.",
-            en: "Splits into plugins/decision (PreToolUse 0ms fast-path + gate), plugins/decision-stop (incremental diff check), and plugins/decision-subagent with isolated XDG config.env keys.",
-          },
-        },
-        {
-          title: { ko: "Gemini 4 10단계 스웜·서브에이전트 라우터", en: "10-Tier Gemini 4 Subagent Router" },
-          desc: {
-            ko: "레거시 agy-route REPL 없이 PreToolUse overwrite만으로 invoke_subagent 및 swarm add 호출 시 Gemini 4 Hydrogen·Argon·Carbon 10단계 모델과 추론 강도(low~xhigh)를 자동 주입합니다.",
-            en: "Injects 10-tier Hydrogen/Argon/Carbon models and reasoning effort via PreToolUse overwrite on invoke_subagent and swarm add without breaking parent prompt caches.",
-          },
-        },
-        {
-          title: { ko: "agy-decision-mcp 5종 Rust MCP 도구", en: "5 Rust stdio MCP Tools" },
-          desc: {
-            ko: "gate_shell_command, evaluate_decisions, scan_code_checklist, workspace_git_digest, batch_code_context 5종 도구를 제공해 다중 저장소 Git 요약과 체크리스트 심사를 고속 처리합니다.",
-            en: "Exposes gate_shell_command, evaluate_decisions, scan_code_checklist, workspace_git_digest, and batch_code_context over tokio rmcp stdio MCP.",
-          },
-        },
-      ],
-      installCmd: "./scripts/install.sh",
-      cliBlockTitle: "agy-decision-hook :: gate, stop & subagent-router",
-      cliSnippet: `$ agy-decision-hook status
-Config        (XDG 설정·API 키):        ~/.config/agy-decision-lab/config.env (GEMINI_API_KEY: configured)
-PreToolUse    (명령 안전 검문소):       enabled (플러그인: decision)
-PreToolUse    (서브에이전트·스웜 라우터): enabled (플러그인: decision-subagent)
-Stop          (완료 체크리스트 검증):   enabled (플러그인: decision-stop)
-
-$ agy-decision-hook test-gate "git push --force origin main"
-decision=DENY  model=gemini-decision-1  latency=142ms
-reason: protected branch 'main' force-push blocked by PreToolUse policy
-
-$ agy-decision-hook test-subagent "Audit lock ordering across async channels" --kind swarm --workspace inherit
-route -> Gemini 4 Argon (High) · reason=concurrency audit requires multi-step reasoning`,
-      archNodes: [
-        "PreToolUse / Stop Hook",
-        "agy-decision-hook (Rust)",
-        "gemini-decision-1 API",
-        "Allow / Deny / Model Overwrite",
-        "agy-decision-mcp (5 Tools)",
-      ],
-      statusline: {
-        type: "agy",
-        row1: {
-          model: "orchestrator-carbon[1m]",
-          effort: "high",
-          dir: "agy-decision-lab",
-          branch: "main*",
-          ahead: 2,
-          ctxPct: 54,
-          duration: "32m",
-        },
-        row2: { provider: "gemini", p5: 36, t5: "2h18m", p7: 58, t7: "3d1h" },
-        row3: { provider: "3p", p5: 11, t5: "3h50m", p7: 27, t7: "4d9h" },
-        row4: { pr: "#31", state: "merged", title: "Hydrogen 10단계 동적 라우팅 및 레거시 REPL 계층 정리" },
-      },
-    },
-    {
-      id: "gemini-remote-linux",
-      slug: "gemini-remote-linux",
-      kind: "custom-gemini",
-      name: "gemini-remote-linux",
-      badge: "gemini-d",
-      badgeClass: "badge-custom",
-      cwd: "~/dev/git-repo/gemini-remote-linux",
-      branch: "main",
-      agent: "gemini-remote",
-      repoUrl: "https://github.com/KyongSik-Yoon/gemini-remote-linux",
-      siteUrl: null,
-      sub: {
-        ko: "Linux PC ↔ Gemini 모바일·웹·데스크톱 양방향 원격 데몬 (비공식)",
-        en: "Unofficial Gemini Desktop daemon for Linux (Shell, MCP & Wayland/X11)",
-      },
-      summary: {
-        ko: "Linux 워크스테이션을 Gemini 모바일·웹 및 리눅스 비공식 Gemini 데스크톱 앱과 양방향 연결해 로컬 워크스페이스 파일 조작, 셸 실행, MCP 브리지, Wayland/Hyprland·X11 GUI Computer Use를 구동하는 Go 1.27.3 데몬입니다.",
-        en: "Connects Linux PCs to Gemini Mobile, Web, and unofficial Linux Gemini desktop clients in a single Go 1.27.3 binary for scoped workspace file tools, shell commands, MCP bridges, and Wayland/X11 Computer Use.",
-      },
-      stack: ["Go 1.27.3", "Robin/Punctual Protocol", "Wayland / Hyprland & X11", "MIT"],
-      features: [
-        {
-          title: { ko: "모바일·웹·비공식 Linux 데스크톱 연동", en: "Mobile, Web & Unofficial Linux Client Sync" },
-          desc: {
-            ko: "장치 등록·프레즌스·핸드셰이크 세션 갱신으로 좀비 구독 없이 Android/iOS·웹·비공식 Linux 데스크톱 래퍼와 실시간 양방향 스트림을 유지합니다.",
-            en: "Maintains device registration, presence heartbeats, and handshake-safe bidirectional streams across Gemini Mobile, Web, and Linux desktop wrappers.",
-          },
-        },
-        {
-          title: { ko: "로컬 툴 실행 & 외부 MCP 브리지", en: "Scoped File Tools & MCP Bridge" },
-          desc: {
-            ko: "허용된 폴더 내에서 셸·파일 편집(view_file 로컬 텍스트 직독 분기 포함)·Grep을 처리하며 내장 Git·Obsidian 및 외부 stdio MCP 서버를 연결합니다.",
-            en: "Runs scoped shell, grep, and file edits (with local text branching in view_file) alongside built-in git/obsidian and external stdio MCP servers.",
-          },
-        },
-        {
-          title: { ko: "Wayland / X11 GUI & systemd 상주", en: "Wayland/X11 GUI & systemd Service" },
-          desc: {
-            ko: "Wayland/Hyprland(hyprctl, grim, wtype, ydotool)와 X11(xdotool, import) GUI 제어(ui_control)를 지원하며 ./gemini-remote service install로 사용자 서비스 등록이 가능합니다.",
-            en: "Supports ui_control on both Hyprland/Wayland and X11 plus one-command user daemon installation via ./gemini-remote service install.",
-          },
-        },
-      ],
-      installCmd: "./gemini-remote login && ./gemini-remote folders add ~/dev/git-repo && ./gemini-remote register && ./gemini-remote serve",
-      cliBlockTitle: "gemini-remote :: register & serve",
-      cliSnippet: `$ ./gemini-remote folders add ~/dev/git-repo
-$ ./gemini-remote register
-$ ./gemini-remote serve   # 또는 ./gemini-remote service install
-[auth]   OAuth credentials verified (device: omarchy-linux-01)
-[bridge] folders mounted: ~/dev/git-repo
-[mcp]    attached: git, obsidian (+ external stdio bridge)
-[gui]    compositor=Hyprland (capture=grim, input=wtype+ydotool)
-[stream] Robin/Punctual connected (Mobile / Web / Linux desktop wrapper)`,
-      archNodes: [
-        "Gemini Mobile / Web / Desktop",
-        "Cloud Gateway (Robin/Punctual)",
-        "gemini-remote (Go 1.27.3)",
-        "Local Shell · File · MCP",
-        "Wayland / Hyprland & X11 GUI",
-      ],
-      statusline: {
-        type: "custom-gemini",
-        row1: {
-          model: "gemini-remote[go1.27.3]",
-          proto: "Robin/Punctual",
-          rttPct: 21,
-          rttLabel: "41ms RTT",
-          host: "omarchy-linux-01",
-        },
-        row2: {
-          label: "stream",
-          p5: 100,
-          t5: "online",
-          p7: 32,
-          t7: "2 folders",
-        },
-        row3: {
-          label: "wayland",
-          compositor: "Hyprland + X11 ui_control",
-          mcp: "git + obsidian + stdio MCP",
-        },
-      },
-    },
-    {
-      id: "ts-gate",
-      slug: "ts-gate",
-      kind: "custom-ts",
-      name: "ts-gate",
-      badge: "tailnet",
-      badgeClass: "badge-custom",
-      cwd: "~/dev/git-repo/ts-gate",
-      branch: "main",
-      agent: "ts-gate",
-      repoUrl: "https://github.com/KyongSik-Yoon/ts-gate",
-      siteUrl: null,
-      sub: {
-        ko: "v0.1.0 · Linux·macOS Tailnet 전용 일시 포트 게이트 TUI/CLI",
-        en: "v0.1.0 · Tailnet-only temporary reverse proxy gate manager (Linux & macOS)",
-      },
-      summary: {
-        ko: "외부 공인 인터넷(tailscale funnel) 노출을 원천 차단하고 Tailscale tailnet 내부(tailscale serve)로만 로컬·내부망 포트를 일시 개방한 뒤, TTL 자동 만료(기본 1시간)와 재부팅 시 자동 회수(boot-guard)를 보장하는 Linux·macOS(x86_64/ARM64)용 무의존성 Rust TUI/CLI 도구(v0.1.0)입니다.",
-        en: "Zero-dependency Rust TUI/CLI (v0.1.0) for Linux & macOS (x86_64 & ARM64) that exposes temporary tailnet-only services via tailscale serve with automatic TTL expiry and reboot auto-close.",
-      },
-      stack: ["Rust (std only)", "v0.1.0", "Linux & macOS", "Tailscale Serve"],
-      features: [
-        {
-          title: { ko: "Tailnet 전용 & 외부 상시 포트 보호", en: "Tailnet-Only · External Port Guard" },
-          desc: {
-            ko: "모든 개방은 tailscale serve --bg 만 허용해 공인 funnel 노출을 차단하며, ts-gate 밖에서 열린 기존 상시 포트(:443 등)는 절대 덮어쓰거나 닫지 않습니다.",
-            en: "Uses private tailscale serve --bg strictly without funnel support, and refuses to overwrite or close external always-on ports such as :443.",
-          },
-        },
-        {
-          title: { ko: "크로스 플랫폼 TTL 타이머 & Boot Guard", en: "Cross-Platform TTL & Boot Guard" },
-          desc: {
-            ko: "Linux(systemd-run --user + ts-gate-boot.service)와 macOS(만료 워커 + LaunchAgent plist) 양쪽에서 TTL 만료 시 자동 해제 및 재부팅 직후 sweep --boot 정리를 수행합니다.",
-            en: "Enforces TTL expiry and startup sweep --boot via systemd-run/user unit on Linux and background worker/LaunchAgent plist on macOS.",
-          },
-        },
-        {
-          title: { ko: "endpoints + leases 분리 & 무의존성 TUI", en: "0600 State Split & Raw ANSI TUI" },
-          desc: {
-            ko: "외부 크레이트 없는 raw ANSI TUI로 엔드포인트 추가/열기/닫기/URL 복사(OSC 52)를 다루며, 상태는 endpoints.json(0600)과 leases.json(0600)에 안전하게 저장합니다.",
-            en: "Drives a zero-crate ANSI TUI with OSC 52 clipboard copy while storing definitions in ~/.config/ts-gate/endpoints.json and active leases in ~/.local/state/ts-gate/leases.json.",
-          },
-        },
-      ],
-      installCmd: "ts-gate add grafana http://127.0.0.1:3000 -p 3000 -t 1h --open && ts-gate list",
-      cliBlockTitle: "ts-gate v0.1.0 :: open, quick & list",
-      cliSnippet: `$ ts-gate add grafana http://127.0.0.1:3000 -p 3000 -t 1h --open
-[+] 개방 완료: https://omarchy.tailnet.ts.net:3000 (16:30 자동 해제)
-
-$ ts-gate quick 127.0.0.1:8080 -p 18080 -t 15m
-[+] 일회성 개방 완료: https://omarchy.tailnet.ts.net:18080 (15분 후 자동 해제)
-
-$ ts-gate list
-ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
-
-등록된 게이트:
-  ● grafana      :3000 -> 127.0.0.1:3000  |  열림 (남은 58분, 16:30 해제)
-    접속: https://omarchy.tailnet.ts.net:3000
-
-외부 상시 포트 (보호됨):
-  ◆ :443 -> 127.0.0.1:8787  (ts-gate 관리 대상 아님, 보호됨)`,
-      archNodes: [
-        "ts-gate CLI / Raw ANSI TUI",
-        "endpoints.json & leases.json",
-        "tailscale serve --bg (No Funnel)",
-        "systemd-run / macOS TTL Worker",
-        "ts-gate-boot / LaunchAgent Sweep",
-      ],
-      statusline: {
-        type: "custom-ts",
-        row1: {
-          model: "ts-gate[v0.1.0]",
-          mode: "tailnet-only",
-          ttlPct: 68,
-          ttlLabel: "58m left",
-          funnel: "funnel: BLOCKED",
-        },
-        row2: {
-          label: "gates",
-          p5: 34,
-          t5: ":3000 → :3000 (1h)",
-          p7: 100,
-          t7: ":443 collie protected",
-        },
-        row3: {
-          label: "guard",
-          boot: "boot-guard armed",
-          state: "endpoints + leases synced",
-        },
-      },
-    },
-  ];
-
-  const ALL_ITEMS = [PROFILE_ENTRY, ...PROJECTS];
-
-  /** @type {{ selectedId: string; tab: string; lang: Lang; active: boolean; filter: string; sidebarOpen: boolean }} */
   const state = {
     selectedId: "cc-desktop-mod",
-    tab: "overview",
-    lang: "ko",
+    pane: "readme",
+    zoom: null,
+    side: "demo",
+    /** @type {Lang} */
+    lang: store.get("lang") || ((navigator.language || "ko").toLowerCase().startsWith("ko") ? "ko" : "en"),
     active: true,
     filter: "",
     sidebarOpen: false,
+    theme: root.dataset.theme || "tokyo-night",
+    crt: root.dataset.crt === "on",
+    layout: "single",
+    cols: 0,
+    rows: 0,
+    cw: 8,
+    scene: {},
+    agents: {},
+    history: [],
+    historyIndex: -1,
+    minutes: 0,
+    ctxDrift: 0,
   };
 
   const els = {
-    topbarTabs: document.getElementById("topbar-tabs"),
-    brandHomeBtn: document.getElementById("brand-home-btn"),
-    mobileMenuBtn: document.getElementById("mobile-menu-btn"),
-    sidebar: document.getElementById("herdr-sidebar"),
-    sidebarBackdrop: document.getElementById("sidebar-backdrop"),
-    spaceFilter: document.getElementById("space-filter"),
-    profileSpaceList: document.getElementById("profile-space-list"),
-    projectSpaceList: document.getElementById("project-space-list"),
-    projectsCount: document.getElementById("projects-count"),
-    activeToggleBtn: document.getElementById("active-toggle-btn"),
-    stateToggleLabel: document.getElementById("state-toggle-label"),
-    langToggleBtn: document.getElementById("lang-toggle-btn"),
-    paneLiveDot: document.getElementById("pane-live-dot"),
-    paneAgentLabel: document.getElementById("pane-agent-label"),
-    paneCwd: document.getElementById("pane-cwd"),
-    paneBranchChip: document.getElementById("pane-branch-chip"),
-    paneBorderActions: document.getElementById("pane-border-actions"),
-    terminalScroll: document.getElementById("terminal-scroll"),
-    terminalContent: document.getElementById("terminal-content"),
-    terminalPromptForm: document.getElementById("terminal-prompt-form"),
-    terminalCmdInput: document.getElementById("terminal-cmd-input"),
-    promptFeedback: document.getElementById("prompt-feedback"),
-    statuslineLogoSlot: document.getElementById("statusline-logo-slot"),
-    statuslineRows: document.getElementById("statusline-rows"),
+    app: $("app"),
+    probe: $("cell-probe"),
+    tabs: $("topbar-tabs"),
+    brandHomeBtn: $("brand-home-btn"),
+    mobileMenuBtn: $("mobile-menu-btn"),
+    themeBtn: $("theme-btn"),
+    themeLabel: $("theme-label"),
+    crtBtn: $("crt-btn"),
+    activeToggleBtn: $("active-toggle-btn"),
+    stateToggleLabel: $("state-toggle-label"),
+    langToggleBtn: $("lang-toggle-btn"),
+    sidebar: $("herdr-sidebar"),
+    sidebarBackdrop: $("sidebar-backdrop"),
+    sbScroll: $("sb-scroll"),
+    sbCursor: $("sb-cursor"),
+    spaceFilter: $("space-filter"),
+    profileSpaceList: $("profile-space-list"),
+    projectSpaceList: $("project-space-list"),
+    projectsCount: $("projects-count"),
+    layoutMeta: $("layout-meta"),
+    paneList: $("pane-list"),
+    tiles: $("tiles"),
+    paneState: $("pane-state"),
+    paneAgentLabel: $("pane-agent-label"),
+    paneCwd: $("pane-cwd"),
+    paneBranchChip: $("pane-branch-chip"),
+    paneBorderActions: $("pane-border-actions"),
+    terminalScroll: $("terminal-scroll"),
+    term: $("terminal-content"),
+    demoBody: $("demo-body"),
+    demoTitle: $("demo-title"),
+    demoProgress: $("demo-progress"),
+    mediaBody: $("media-body"),
+    mediaTitle: $("media-title"),
+    splitX: $("split-x"),
+    splitY: $("split-y"),
+    promptForm: $("terminal-prompt-form"),
+    cmdInput: $("terminal-cmd-input"),
+    promptFeedback: $("prompt-feedback"),
+    statuslineLogoSlot: $("statusline-logo-slot"),
+    statuslineRows: $("statusline-rows"),
+    resizeOverlay: $("resize-overlay"),
+    toasts: $("toasts"),
+    whichkey: $("whichkey"),
+    lightbox: $("lightbox"),
+    lbTitle: $("lb-title"),
+    lbStage: $("lb-stage"),
+    lbCaption: $("lb-caption"),
+    lbOpen: $("lb-open"),
+    boot: $("boot"),
+    bootLines: $("boot-lines"),
   };
 
+  // ── small helpers ──────────────────────────────────────────────
   function esc(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -666,10 +130,139 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
     return String(val ?? "");
   }
 
-  function getSelectedItem() {
-    return ALL_ITEMS.find((item) => item.id === state.selectedId) || PROJECTS[0];
+  const L = (ko, en) => (state.lang === "ko" ? ko : en);
+  const animated = () => state.active && !reduceMotion.matches;
+  const getSelectedItem = () => ALL_ITEMS.find((item) => item.id === state.selectedId) || PROJECTS[0];
+
+  /** Terminal cell width of a string: Hangul, CJK and full-width forms take two cells. */
+  function cellWidth(text) {
+    let width = 0;
+    for (const ch of String(text)) {
+      const cp = ch.codePointAt(0);
+      const wide =
+        (cp >= 0x1100 && cp <= 0x115f) ||
+        (cp >= 0x2e80 && cp <= 0xa4cf) ||
+        (cp >= 0xac00 && cp <= 0xd7a3) ||
+        (cp >= 0xf900 && cp <= 0xfaff) ||
+        (cp >= 0xff00 && cp <= 0xff60) ||
+        cp === 0x23f1;
+      width += wide ? 2 : 1;
+    }
+    return width;
   }
 
+  /** Cut a string to a number of cells, ending in an ellipsis when it had to be shortened. */
+  function clipCells(text, cols) {
+    if (cellWidth(text) <= cols) return text;
+    let out = "";
+    let width = 0;
+    for (const ch of String(text)) {
+      const w = cellWidth(ch);
+      if (width + w > cols - 1) break;
+      out += ch;
+      width += w;
+    }
+    return `${out.trimEnd()}…`;
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
+  // ── grid: measure the cell, snap the window, pick a layout ─────
+  let resizeOverlayTimer = 0;
+
+  function measureGrid(announce) {
+    const vv = window.visualViewport;
+    const usingVisual = vv && Math.abs(vv.scale - 1) < 0.01;
+    const viewW = root.clientWidth;
+    const viewH = usingVisual ? vv.height : window.innerHeight;
+
+    // Keep the window on the visible part of the screen while a soft keyboard is up.
+    document.body.style.height = `${viewH}px`;
+    document.body.style.top = usingVisual ? `${vv.offsetTop}px` : "0px";
+
+    const fontSize = parseFloat(getComputedStyle(root).fontSize) || 13;
+    const cw = els.probe.getBoundingClientRect().width / 10 || fontSize * 0.6;
+    const lh = Math.round(fontSize * 1.55);
+    const pad = viewW < 560 ? 3 : 8;
+
+    const frame = getComputedStyle($("ghostty"));
+    const availW = viewW - parseFloat(frame.paddingLeft) - parseFloat(frame.paddingRight) - pad * 2;
+    const availH = viewH - parseFloat(frame.paddingTop) - parseFloat(frame.paddingBottom) - pad * 2;
+    const cols = Math.max(20, Math.floor(availW / cw));
+    const rows = Math.max(8, Math.floor(availH / lh));
+
+    root.style.setProperty("--cw", `${cw}px`);
+    root.style.setProperty("--lh", `${lh}px`);
+    root.style.setProperty("--pad", `${pad}px`);
+    root.style.setProperty("--shell-w", `${cols * cw}px`);
+    root.style.setProperty("--shell-h", `${rows * lh}px`);
+
+    const changed = cols !== state.cols || rows !== state.rows;
+    state.cols = cols;
+    state.rows = rows;
+    state.cw = cw;
+
+    const dock = cols >= 112;
+    const mainCols = cols - (dock ? SIDE_COLS : 0);
+    let layout = "single";
+    if (mainCols >= 118 && rows >= 38) layout = "tiled3";
+    else if (mainCols >= 84 && rows >= 54) layout = "tiled2";
+    else if (mainCols >= 100 && rows >= 18) layout = "split2";
+
+    const prevLayout = state.layout;
+    state.layout = layout;
+    els.app.dataset.layout = layout;
+    els.app.dataset.sidebar = dock ? "dock" : "drawer";
+    els.app.dataset.w = cols >= 150 ? "l" : cols >= 112 ? "m" : cols >= 64 ? "s" : "xs";
+    els.app.toggleAttribute("data-short", rows < 24);
+    if (dock && state.sidebarOpen) setSidebarOpen(false);
+    if (layout === "single" && state.zoom) setZoom(null);
+
+    if (changed) {
+      els.layoutMeta.textContent = `${cols}×${rows}`;
+      if (prevLayout !== layout) applyPaneVisibility();
+      renderStatusline(getSelectedItem(), 1);
+      positionSidebarCursor(false);
+      if (announce) {
+        els.resizeOverlay.textContent = `${cols} × ${rows}`;
+        els.resizeOverlay.classList.add("is-on");
+        window.clearTimeout(resizeOverlayTimer);
+        resizeOverlayTimer = window.setTimeout(() => els.resizeOverlay.classList.remove("is-on"), 700);
+      }
+    }
+  }
+
+  // ── theme ──────────────────────────────────────────────────────
+  function setTheme(name, persist = true) {
+    if (!THEMES.includes(name)) return false;
+    const wasRetro = state.theme === "amber" || state.theme === "phosphor";
+    const isRetro = name === "amber" || name === "phosphor";
+    state.theme = name;
+    root.dataset.theme = name;
+    els.themeLabel.textContent = name;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", THEME_COLOR[name]);
+    if (persist) store.set("theme", name);
+    // The phosphor themes come with their tube; leaving them switches it back off.
+    if (isRetro !== wasRetro) setCrt(isRetro, persist);
+    return true;
+  }
+
+  function setCrt(on, persist = true) {
+    state.crt = on;
+    root.dataset.crt = on ? "on" : "off";
+    els.crtBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (persist) store.set("crt", on ? "on" : "off");
+  }
+
+  function cycleTheme() {
+    setTheme(THEMES[(THEMES.indexOf(state.theme) + 1) % THEMES.length]);
+    setPromptFeedback(`theme: ${state.theme}`);
+  }
+
+  // ── statusline pieces ──────────────────────────────────────────
   function buildBarHtml(pct, width = 6, tone = "usage") {
     const clamped = Math.max(0, Math.min(100, Math.round(pct)));
     const halfCells = Math.floor((clamped * width * 2 * 2 + 100) / 200);
@@ -695,8 +288,7 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
     return `<span class="${colorClass}">${filled}</span><span class="c-muted">${empty}</span>`;
   }
 
-  function renderClawdSvg(active) {
-    const uid = "clawd-hero";
+  function renderClawdSvg(active, uid) {
     const activeAttr = active ? ' data-active=""' : "";
     return `<svg viewBox="0 0 42 42"${activeAttr} role="img" aria-label="Claude Clawd logo">
       <defs>
@@ -772,8 +364,7 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
     </svg>`;
   }
 
-  function renderAgySvg(active) {
-    const uid = "agy-hero";
+  function renderAgySvg(active, uid) {
     const activeAttr = active ? ' data-active=""' : "";
     return `<svg viewBox="0 0 112 112"${activeAttr} role="img" aria-label="Antigravity logo">
       <defs>
@@ -844,77 +435,284 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
 
   function renderCustomSvg(kind, active) {
     const activeAttr = active ? ' data-active=""' : "";
+    const bg = "fill:var(--bg-raise)";
     if (kind === "custom-soksak") {
       return `<svg viewBox="0 0 40 40"${activeAttr} role="img" aria-label="Soksak NPU icon">
         <g class="custom-logo-pulse">
-          <rect x="4" y="6" width="32" height="24" rx="8" fill="#182232" stroke="#73daca" stroke-width="1.8" />
-          <path d="M12 20v-4M16.5 23v-10M21 25v-14M25.5 22v-8M30 20v-4" stroke="#73daca" stroke-width="2.2" stroke-linecap="round" />
-          <path d="M14 30l-3 5 7-5" fill="#182232" stroke="#73daca" stroke-width="1.6" stroke-linejoin="round" />
+          <rect x="4" y="6" width="32" height="24" rx="8" style="${bg};stroke:var(--teal)" stroke-width="1.8" />
+          <path d="M12 20v-4M16.5 23v-10M21 25v-14M25.5 22v-8M30 20v-4" style="stroke:var(--teal)" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M14 30l-3 5 7-5" style="${bg};stroke:var(--teal)" stroke-width="1.6" stroke-linejoin="round" />
         </g>
       </svg>`;
     }
     if (kind === "custom-gemini") {
       return `<svg viewBox="0 0 40 40"${activeAttr} role="img" aria-label="Gemini remote Linux icon">
         <g class="custom-logo-pulse">
-          <circle cx="20" cy="20" r="16" fill="#111827" stroke="#4796e3" stroke-width="1.5" />
-          <path d="M20 7c0 7.2-5.8 13-13 13 7.2 0 13 5.8 13 13 0-7.2 5.8-13 13-13-7.2 0-13-5.8-13-13Z" fill="#8ab4f8" />
+          <circle cx="20" cy="20" r="16" style="${bg};stroke:var(--gem)" stroke-width="1.5" />
+          <path d="M20 7c0 7.2-5.8 13-13 13 7.2 0 13 5.8 13 13 0-7.2 5.8-13 13-13-7.2 0-13-5.8-13-13Z" style="fill:var(--gem)" />
         </g>
       </svg>`;
     }
     if (kind === "custom-ts") {
       return `<svg viewBox="0 0 40 40"${activeAttr} role="img" aria-label="Tailscale gate icon">
         <g class="custom-logo-pulse">
-          <path d="M20 4l12 5v9c0 8.2-5.1 14.6-12 18-6.9-3.4-12-9.8-12-18V9l12-5Z" fill="#121824" stroke="#73daca" stroke-width="1.8" />
-          <circle cx="14" cy="17" r="2.1" fill="#73daca" />
-          <circle cx="20" cy="17" r="2.1" fill="#7aa2f7" />
-          <circle cx="26" cy="17" r="2.1" fill="#73daca" />
-          <circle cx="20" cy="24" r="2.1" fill="#9ece6a" />
+          <path d="M20 4l12 5v9c0 8.2-5.1 14.6-12 18-6.9-3.4-12-9.8-12-18V9l12-5Z" style="${bg};stroke:var(--teal)" stroke-width="1.8" />
+          <circle cx="14" cy="17" r="2.1" style="fill:var(--teal)" />
+          <circle cx="20" cy="17" r="2.1" style="fill:var(--blue)" />
+          <circle cx="26" cy="17" r="2.1" style="fill:var(--teal)" />
+          <circle cx="20" cy="24" r="2.1" style="fill:var(--green)" />
         </g>
       </svg>`;
     }
     return `<svg viewBox="0 0 40 40"${activeAttr} role="img" aria-label="Herdr mux icon">
       <g class="custom-logo-pulse">
-        <rect x="4" y="6" width="32" height="28" rx="6" fill="#121622" stroke="#7aa2f7" stroke-width="1.8" />
-        <path d="M12 16l6 4-6 4M21 24h7" stroke="#7aa2f7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        <rect x="4" y="6" width="32" height="28" rx="6" style="${bg};stroke:var(--blue)" stroke-width="1.8" />
+        <path d="M12 16l6 4-6 4M21 24h7" style="stroke:var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
       </g>
     </svg>`;
   }
 
+  function renderLogo(item, uid) {
+    const type = item.statusline.type;
+    if (type === "claude") return renderClawdSvg(state.active, `clawd-${uid}`);
+    if (type === "agy") return renderAgySvg(state.active, `agy-${uid}`);
+    return renderCustomSvg(type, state.active);
+  }
+
+  // A statusline row is a list of groups. When the dock is too narrow the group with the
+  // highest priority number goes first, so the row shortens at word boundaries instead of
+  // being cut mid-number.
+  const seg = (cls, text) => ({ h: `<span class="${cls}">${esc(text)}</span>`, w: cellWidth(text) });
+  const bar = (pct, tone) => ({ h: buildBarHtml(pct, 6, tone), w: 6 });
+  const pct3 = (n) => `${String(Math.round(n)).padStart(3, " ")}%`;
+
+  function grp(prio, ...parts) {
+    return {
+      prio,
+      h: parts.map((p) => p.h).join(" "),
+      w: parts.reduce((sum, p) => sum + p.w, 0) + parts.length - 1,
+    };
+  }
+
+  function fitRow(groups, cols) {
+    const kept = groups.slice();
+    const width = () => kept.reduce((sum, g) => sum + g.w, 0) + kept.length - 1;
+    while (width() > cols) {
+      let drop = -1;
+      let worst = 0;
+      kept.forEach((g, i) => {
+        if (g.prio > 0 && g.prio >= worst) {
+          worst = g.prio;
+          drop = i;
+        }
+      });
+      if (drop < 0) break;
+      kept.splice(drop, 1);
+    }
+    return `<div class="sl-row">${kept.map((g) => g.h).join(" ")}</div>`;
+  }
+
+  function branchSeg(branch, ahead) {
+    const dirty = branch.endsWith("*");
+    const clean = dirty ? branch.slice(0, -1) : branch;
+    const aheadText = ahead ? ` ↑${ahead}f` : "";
+    return {
+      h: `<span class="c-green">(${esc(clean)}${dirty ? '<span class="c-red">*</span>' : ""}${ahead ? ` <span class="c-yellow">↑${ahead}f</span>` : ""})</span>`,
+      w: cellWidth(`(${branch}${aheadText})`),
+    };
+  }
+
+  function addMinutes(label, extra) {
+    const m = /^(\d+)m$/.exec(label);
+    if (!m) return label;
+    const total = Number(m[1]) + extra;
+    return total >= 60 ? `${Math.floor(total / 60)}h${String(total % 60).padStart(2, "0")}m` : `${total}m`;
+  }
+
+  /** @param {number} k 0..1 — how far the bars have filled (they sweep in when a space opens) */
+  function statuslineRows(item, k, cols) {
+    const sl = item.statusline;
+    const r1 = sl.row1;
+    const r2 = sl.row2;
+    const r3 = sl.row3;
+    const dim = (text) => seg("c-dim", text);
+    const white = (text) => seg("c-white", text);
+    const quota = (prio, lead, p5, t5, p7, t7, restPrio) => [
+      grp(prio, ...lead, white("5h"), bar(p5 * k), white(pct3(p5 * k))),
+      grp(5, dim(t5)),
+      grp(2, dim("·"), white("7d"), bar(p7 * k), white(pct3(p7 * k))),
+      grp(restPrio, dim(t7)),
+    ];
+
+    if (sl.type === "claude" || sl.type === "agy") {
+      const ctx = Math.min(99, r1.ctxPct + state.ctxDrift) * k;
+      const rows = [
+        [
+          grp(0, seg("c-blue", r1.model), seg("c-yellow", r1.effort)),
+          grp(3, dim("│"), seg("c-cyan", r1.dir), branchSeg(r1.branch, r1.ahead)),
+          grp(1, dim("│"), white("context"), bar(ctx), white(`${Math.round(ctx)}%`)),
+          grp(4, dim("│"), { h: '<span class="c-dim g2">⏱</span>', w: 2 }, white(addMinutes(r1.duration, state.minutes))),
+        ],
+      ];
+      if (sl.type === "claude") {
+        rows.push([
+          ...quota(0, [dim("├─"), seg("c-clawd", "claude")], r2.p5, r2.t5, r2.p7, r2.t7, 6),
+          grp(7, dim("·"), seg("c-magenta", r2.scopedName), bar(r2.scopedPct * k), white(`${Math.round(r2.scopedPct * k)}%`)),
+          grp(8, dim("· advisor"), white(r2.advisorCalls), dim("calls"), white(r2.advisorTokens), dim("tok")),
+        ]);
+        rows.push(quota(0, [dim("└─"), seg("c-clawd", "codex ")], r3.p5, r3.t5, r3.p7, r3.t7, 6));
+      } else {
+        const r4 = sl.row4;
+        rows.push(quota(0, [dim("├─"), seg("c-gem-blue", "gemini")], r2.p5, r2.t5, r2.p7, r2.t7, 6));
+        rows.push(quota(0, [dim("└─"), seg("c-gem-purple", "3p    ")], r3.p5, r3.t5, r3.p7, r3.t7, 6));
+        rows.push([grp(0, seg(r4.state === "merged" ? "c-magenta" : "c-teal", clipCells(`${r4.pr} ${r4.state} · ${r4.title}`, cols)))]);
+      }
+      return rows;
+    }
+
+    if (sl.type === "custom-soksak") {
+      return [
+        [
+          grp(0, seg("c-teal", r1.model)),
+          grp(4, seg("c-green", r1.engine)),
+          grp(1, dim("│"), white("latency"), bar(r1.rtfPct * k), white(r1.rtfLabel)),
+          grp(3, dim("│"), seg("c-cyan", r1.target)),
+        ],
+        [
+          grp(0, dim("├─"), seg("c-teal", r2.label), white("voice"), bar(r2.p5 * k, "health"), dim(r2.t5)),
+          grp(2, dim("·"), white("floor"), bar(r2.p7 * k), dim(r2.t7)),
+        ],
+        [
+          grp(0, dim("└─"), seg("c-teal", r3.label), seg("c-green", r3.host)),
+          grp(2, dim("·"), seg("c-yellow", r3.autoEnter)),
+          grp(3, dim("·"), white(r3.vocab)),
+        ],
+      ];
+    }
+
+    if (sl.type === "custom-gemini") {
+      return [
+        [
+          grp(0, seg("c-gem-blue", r1.model)),
+          grp(4, seg("c-cyan", r1.proto)),
+          grp(1, dim("│"), white("rtt"), bar(r1.rttPct * k), white(r1.rttLabel)),
+          grp(3, dim("│"), seg("c-green", r1.host)),
+        ],
+        [
+          grp(0, dim("├─"), seg("c-gem-blue", r2.label), white("sync"), bar(r2.p5 * k, "health"), seg("c-green", r2.t5)),
+          grp(2, dim("·"), white("mounts"), bar(r2.p7 * k), white(r2.t7)),
+        ],
+        [grp(0, dim("└─"), seg("c-gem-purple", r3.label), white(r3.compositor)), grp(2, dim("·"), seg("c-teal", r3.mcp))],
+      ];
+    }
+
+    if (sl.type === "custom-ts") {
+      return [
+        [
+          grp(0, seg("c-teal", r1.model)),
+          grp(3, seg("c-green", r1.mode)),
+          grp(1, dim("│"), white("ttl"), bar(r1.ttlPct * k), white(r1.ttlLabel)),
+          grp(2, dim("│"), seg("c-red", r1.funnel)),
+        ],
+        [
+          grp(0, dim("├─"), seg("c-teal", r2.label), white("temp"), bar(r2.p5 * k), white(r2.t5)),
+          grp(2, dim("·"), white("keep"), bar(r2.p7 * k, "health"), seg("c-green", r2.t7)),
+        ],
+        [grp(0, dim("└─"), seg("c-teal", r3.label), seg("c-green", r3.boot)), grp(2, dim("·"), dim(r3.state))],
+      ];
+    }
+
+    const ctx = r1.ctxPct * k;
+    return [
+      [
+        grp(0, seg("c-blue", r1.model), seg("c-yellow", r1.tag)),
+        grp(3, dim("│"), seg("c-cyan", r1.dir), seg("c-green", `(${r1.branch})`)),
+        grp(1, dim("│"), white("context"), bar(ctx), white(`${Math.round(ctx)}%`)),
+        grp(4, dim("│"), seg("c-teal", r1.extra)),
+      ],
+      quota(0, [dim("├─"), seg("c-clawd", r2.label)], r2.p5, r2.t5, r2.p7, `${r2.t7} · ${r2.extra}`, 6),
+      quota(0, [dim("└─"), seg("c-gem-blue", r3.label)], r3.p5, r3.t5, r3.p7, `${r3.t7} · ${r3.extra}`, 6),
+    ];
+  }
+
+  function renderStatusline(item, k) {
+    const cols = Math.max(10, Math.floor(els.statuslineRows.clientWidth / state.cw));
+    els.statuslineRows.innerHTML = statuslineRows(item, k, cols).map((row) => fitRow(row, cols)).join("");
+  }
+
+  let statuslineFrame = 0;
+
+  /** Bars sweep up from empty, one terminal cell at a time. */
+  function sweepStatusline(item) {
+    window.cancelAnimationFrame(statuslineFrame);
+    els.statuslineLogoSlot.innerHTML = renderLogo(item, "sl");
+    if (!animated()) {
+      renderStatusline(item, 1);
+      return;
+    }
+    const started = performance.now();
+    const step = (now) => {
+      const p = Math.min(1, (now - started) / 520);
+      renderStatusline(item, 1 - (1 - p) ** 3);
+      if (p < 1) statuslineFrame = window.requestAnimationFrame(step);
+    };
+    statuslineFrame = window.requestAnimationFrame(step);
+  }
+
+  // ── top bar ────────────────────────────────────────────────────
+  function isPaneVisible(pane) {
+    if (state.zoom) return state.zoom === pane;
+    if (state.layout === "single") return state.pane === pane;
+    if (state.layout === "split2") return pane === "readme" || pane === state.side;
+    return true;
+  }
+
   function renderTabs() {
-    els.topbarTabs.innerHTML = TABS.map((tab) => {
-      const isActive = state.tab === tab.id;
-      return `<button type="button" class="tab-chip${isActive ? " is-active" : ""}" data-tab="${tab.id}">
-        <span class="tab-num">${tab.num}</span>
-        <span>${esc(tab[state.lang])}</span>
+    els.tabs.innerHTML = TABS.map((tab) => {
+      const cls = `tab${state.pane === tab.id ? " is-active" : ""}${isPaneVisible(tab.id) ? " is-visible" : ""}`;
+      return `<button type="button" class="${cls}" data-tab="${tab.id}" aria-pressed="${state.pane === tab.id}">
+        <span class="tab-num">${tab.num}</span><span>${esc(tab[state.lang])}</span>
       </button>`;
     }).join("");
   }
 
-  function renderSpaceCard(item, indexBadge) {
-    const isSelected = state.selectedId === item.id;
-    const statusGlyph = state.active ? "●" : "○";
-    const statusCls = state.active ? "is-working" : "is-idle";
-    const idxHint = indexBadge ? `<span class="c-muted">${indexBadge}</span>` : "";
+  function renderTopControls() {
+    els.activeToggleBtn.setAttribute("aria-pressed", state.active ? "true" : "false");
+    els.stateToggleLabel.textContent = state.active ? "working" : "idle";
+    els.langToggleBtn.textContent = state.lang.toUpperCase();
+    els.themeLabel.textContent = state.theme;
+    els.crtBtn.setAttribute("aria-pressed", state.crt ? "true" : "false");
+    root.dataset.active = state.active ? "on" : "off";
+    root.lang = state.lang;
+  }
 
-    return `<button
-      type="button"
-      class="space-card${isSelected ? " is-selected" : ""}"
-      data-select-id="${esc(item.id)}"
-      role="option"
-      aria-selected="${isSelected ? "true" : "false"}"
-    >
-      <div class="space-card-row1">
-        <span class="space-card-title-group">
-          <span class="status-symbol ${statusCls}" aria-hidden="true">${statusGlyph}</span>
-          <span class="space-name">${esc(item.name)}</span>
-          ${idxHint}
-        </span>
-        <span class="space-agent-badge ${item.badgeClass}">${esc(item.badge)}</span>
-      </div>
-      <div class="space-card-row2">
+  // ── sidebar ────────────────────────────────────────────────────
+  function agentState(id) {
+    if (!state.active) return "idle";
+    return state.agents[id] || "idle";
+  }
+
+  function stateGlyph(st) {
+    if (st === "working") return SPINNER[0];
+    if (st === "done") return "●";
+    return "○";
+  }
+
+  function renderSpaceCard(item, indexHint) {
+    const selected = state.selectedId === item.id;
+    const st = agentState(item.id);
+    return `<button type="button" class="space${selected ? " is-selected" : ""}" data-select-id="${esc(item.id)}"
+      data-state="${st}" role="option" aria-selected="${selected}">
+      <span class="space-row">
+        <span class="space-state" data-state="${st}" data-agent="${esc(item.id)}"${st === "working" ? " data-spin" : ""} aria-hidden="true">${stateGlyph(st)}</span>
+        <span class="space-name">${esc(item.name)}</span>
+        <span class="space-idx">${esc(indexHint)}</span>
+        <span class="space-badge ${item.badgeClass}">${esc(item.badge)}</span>
+      </span>
+      <span class="space-row space-row2">
         <span class="space-sub">${esc(t(item.sub))}</span>
-        <span class="space-branch">⎇ ${esc(item.branch)}</span>
-      </div>
+        <span class="space-branch"><span class="g1">⎇</span> ${esc(item.branch)}</span>
+      </span>
     </button>`;
   }
 
@@ -932,231 +730,67 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
       );
     });
 
-    els.projectsCount.textContent = `${filtered.length}/${PROJECTS.length} ACTIVE`;
-    if (filtered.length === 0) {
-      els.projectSpaceList.innerHTML = `<div class="c-muted" style="padding:10px;font-size:11.5px;">no matching spaces</div>`;
-    } else {
-      els.projectSpaceList.innerHTML = filtered
-        .map((p) => renderSpaceCard(p, String(PROJECTS.indexOf(p) + 1)))
-        .join("");
+    els.projectsCount.textContent = `${filtered.length}/${PROJECTS.length}`;
+    els.projectSpaceList.innerHTML = filtered.length
+      ? filtered.map((p) => renderSpaceCard(p, String(PROJECTS.indexOf(p) + 1))).join("")
+      : `<div class="sb-empty">no matching spaces</div>`;
+    positionSidebarCursor(false);
+  }
+
+  /** Slide the selection block to the selected space instead of redrawing the list. */
+  function positionSidebarCursor(glide) {
+    const selected = els.sbScroll.querySelector(".space.is-selected");
+    if (!selected) {
+      els.sbCursor.classList.remove("is-on");
+      return;
+    }
+    if (!glide) els.sbCursor.style.transition = "none";
+    els.sbCursor.style.transform = `translateY(${selected.offsetTop}px)`;
+    els.sbCursor.style.height = `${selected.offsetHeight}px`;
+    els.sbCursor.classList.add("is-on");
+    if (!glide) {
+      void els.sbCursor.offsetHeight;
+      els.sbCursor.style.transition = "";
     }
   }
 
-  function renderPaneBorder(item) {
-    els.paneLiveDot.style.background = state.active ? "var(--accent-green)" : "var(--text-dim)";
-    els.paneAgentLabel.textContent = item.agent;
-    els.paneCwd.textContent = item.cwd;
-    els.paneBranchChip.textContent = `⎇ ${item.branch}`;
-
-    const actions = [];
-    if (item.siteUrl) {
-      actions.push(
-        `<a class="pane-action-btn is-primary" href="${esc(item.siteUrl)}" target="_blank" rel="noopener noreferrer">Live Site ↗</a>`
-      );
-    }
-    actions.push(
-      `<a class="pane-action-btn" href="${esc(item.repoUrl)}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>`
-    );
-    els.paneBorderActions.innerHTML = actions.join("");
+  function updateSidebarSelection() {
+    els.sbScroll.querySelectorAll(".space").forEach((node) => {
+      const selected = node.getAttribute("data-select-id") === state.selectedId;
+      node.classList.toggle("is-selected", selected);
+      node.setAttribute("aria-selected", selected ? "true" : "false");
+    });
+    positionSidebarCursor(true);
+    const selected = els.sbScroll.querySelector(".space.is-selected");
+    if (selected) selected.scrollIntoView({ block: "nearest" });
   }
 
-  function renderTerminalBody(item) {
-    const cmdLine =
-      item.id === "profile"
-        ? `cat ~/KyongSik-Yoon/README.md && herdr spaces --all`
-        : `cd ${item.cwd} && cat README.md`;
-
-    const profileExtras =
-      item.id === "profile"
-        ? `<div class="term-section">
-            <div class="term-section-heading">${state.lang === "ko" ? "프로필 & AI 토큰 사용량 카드" : "Profile & AI Usage Telemetry"}</div>
-            <div class="profile-card-wrap profile-header-card" style="margin-bottom:10px;">
-              <img class="profile-avatar" src="https://raw.githubusercontent.com/KyongSik-Yoon/KyongSik-Yoon/main/sam.png" alt="KyongSik Yoon" />
-              <div>
-                <div class="c-white" style="font-size:15px;font-weight:700;">KyongSik Yoon (sam)</div>
-                <div class="c-dim" style="font-size:12px;">${state.lang === "ko" ? "AI 에이전트 하네스 · CLI 패처 · 분산 시스템 개발자" : "AI Agent Harness · Binary Patcher · Systems Engineer"}</div>
-              </div>
-            </div>
-            <div class="profile-card-wrap">
-              <img src="https://raw.githubusercontent.com/KyongSik-Yoon/KyongSik-Yoon/main/cards/ai-usage-full.svg" alt="AI usage" />
-            </div>
-          </div>`
-        : "";
-
-    const simSection = item.simPreview
-      ? `<div class="term-section">
-          <div class="term-section-heading">${state.lang === "ko" ? "Claude Code 데스크톱 모드 미리보기" : "Claude Desktop Mode Preview"}</div>
-          <div class="term-box">
-            <div class="term-box-header">
-              <span>cc-desktop-mod · desk-look pane</span>
-              <span class="c-teal">inline VT100</span>
-            </div>
-            <div style="padding:12px 14px;">
-              <div class="sim-bubble">${esc(item.simPreview.prompt)}</div>
-              <div class="sim-fold">${esc(item.simPreview.fold)}</div>
-              <pre class="term-pre" style="padding:8px 0;">${esc(item.simPreview.answer)}</pre>
-              <div class="sim-progress-band">
-                <span class="c-green">${esc(item.simPreview.band)}</span>
-              </div>
-            </div>
-          </div>
-        </div>`
-      : "";
-
-    const showOverview = state.tab === "overview";
-    const showDemo = state.tab === "overview" || state.tab === "demo";
-    const showArch = state.tab === "overview" || state.tab === "architecture";
-
-    const featuresHtml = showOverview
-      ? `<div class="term-section">
-          <div class="term-section-heading">${state.lang === "ko" ? "핵심 기능" : "Key Capabilities"}</div>
-          <div class="feature-grid">
-            ${item.features
-              .map(
-                (f) => `<article class="feature-item">
-                  <div class="feature-title">${esc(t(f.title))}</div>
-                  <p class="feature-desc">${esc(t(f.desc))}</p>
-                </article>`
-              )
-              .join("")}
-          </div>
-        </div>`
-      : "";
-
-    const demoHtml = showDemo
-      ? `${simSection}
-        <div class="term-section">
-          <div class="term-section-heading">${state.lang === "ko" ? "설치 및 실행" : "Install & Quickstart"}</div>
-          <div class="term-box">
-            <div class="term-box-header">
-              <span>${esc(item.cliBlockTitle)}</span>
-              <button type="button" class="copy-btn" data-copy="${esc(item.installCmd)}">⧉ copy command</button>
-            </div>
-            <pre class="term-pre">${esc(item.cliSnippet)}</pre>
-          </div>
-        </div>`
-      : "";
-
-    const archHtml = showArch
-      ? `<div class="term-section">
-          <div class="term-section-heading">${state.lang === "ko" ? "동작 흐름" : "Architecture Flow"}</div>
-          <div class="term-box">
-            <div class="arch-flow">
-              ${item.archNodes
-                .map(
-                  (node, idx) =>
-                    `<span class="arch-node">${esc(node)}</span>${
-                      idx < item.archNodes.length - 1 ? `<span class="arch-arrow" aria-hidden="true">→</span>` : ""
-                    }`
-                )
-                .join("")}
-            </div>
-          </div>
-        </div>`
-      : "";
-
-    els.terminalContent.innerHTML = `
-      <div class="term-cmd-echo">
-        <span class="term-cmd-prompt">sam@omarchy</span>
-        <span class="c-muted">:</span>
-        <span class="c-cyan">${esc(item.cwd)}</span>
-        <span class="c-muted">$</span>
-        <span class="term-cmd-text">${esc(cmdLine)}</span>
-      </div>
-
-      <div class="term-hero-block">
-        <div class="term-title-row">
-          <h1 class="term-project-title">${esc(item.name)}</h1>
-          <span class="term-project-sub">${esc(t(item.sub))}</span>
-        </div>
-        <p class="term-summary">${esc(t(item.summary))}</p>
-        <div class="term-badge-row">
-          <span class="term-badge is-highlight">agent:${esc(item.agent)}</span>
-          ${item.stack.map((s) => `<span class="term-badge">${esc(s)}</span>`).join("")}
-        </div>
-      </div>
-
-      ${profileExtras}
-      ${featuresHtml}
-      ${demoHtml}
-      ${archHtml}
-    `;
-
-    els.terminalScroll.scrollTop = 0;
+  function updateAgentIcons() {
+    document.querySelectorAll("[data-agent]").forEach((node) => {
+      const id = node.getAttribute("data-agent");
+      const st = agentState(id);
+      node.dataset.state = st;
+      node.toggleAttribute("data-spin", st === "working");
+      if (st !== "working") node.textContent = stateGlyph(st);
+      const card = node.closest(".space");
+      if (card) card.dataset.state = st;
+    });
   }
 
-  function renderStatusline(item) {
-    const sl = item.statusline;
-    let logoHtml = "";
-    let rowsHtml = "";
-
-    if (sl.type === "claude") {
-      logoHtml = renderClawdSvg(state.active);
-      const r1 = sl.row1;
-      const r2 = sl.row2;
-      const r3 = sl.row3;
-      const ahead = r1.ahead ? ` <span class="c-yellow">↑${r1.ahead}f</span>` : "";
-
-      rowsHtml = `
-        <div class="statusline-row"><span class="c-blue">${esc(r1.model)}</span> <span class="c-yellow">${esc(r1.effort)}</span> <span class="c-dim">│</span> <span class="c-cyan">${esc(r1.dir)}</span> <span class="c-green">(${esc(r1.branch.replace("*", ""))}${r1.branch.endsWith("*") ? `<span class="c-red">*</span>` : ""}${ahead})</span> <span class="c-dim">│</span> <span class="c-white">context</span> ${buildBarHtml(r1.ctxPct, 6)} <span class="c-white">${r1.ctxPct}%</span> <span class="c-dim">│ ⏱</span> <span class="c-white">${esc(r1.duration)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-clawd">claude</span> <span class="c-white">5h</span> ${buildBarHtml(r2.p5, 6)} <span class="c-white">${String(r2.p5).padStart(3, " ")}%</span> <span class="c-dim">${esc(r2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">7d</span> ${buildBarHtml(r2.p7, 6)} <span class="c-white">${String(r2.p7).padStart(3, " ")}%</span> <span class="c-dim">${esc(r2.t7)}</span> <span class="c-dim">·</span> <span class="c-magenta">${esc(r2.scopedName)}</span> ${buildBarHtml(r2.scopedPct, 6)} <span class="c-white">${r2.scopedPct}%</span> <span class="c-dim">· advisor</span> <span class="c-white">${r2.advisorCalls}</span><span class="c-dim"> calls</span> <span class="c-white">${esc(r2.advisorTokens)}</span><span class="c-dim"> tok</span></div>
-        <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-clawd">codex </span> <span class="c-white">5h</span> ${buildBarHtml(r3.p5, 6)} <span class="c-white">${String(r3.p5).padStart(3, " ")}%</span> <span class="c-dim">${esc(r3.t5)}</span> <span class="c-dim">·</span> <span class="c-white">7d</span> ${buildBarHtml(r3.p7, 6)} <span class="c-white">${String(r3.p7).padStart(3, " ")}%</span> <span class="c-dim">${esc(r3.t7)}</span></div>
-      `;
-    } else if (sl.type === "agy") {
-      logoHtml = renderAgySvg(state.active);
-      const r1 = sl.row1;
-      const r2 = sl.row2;
-      const r3 = sl.row3;
-      const r4 = sl.row4;
-      const ahead = r1.ahead ? ` <span class="c-yellow">↑${r1.ahead}f</span>` : "";
-      const hasDirty = r1.branch.endsWith("*");
-      const branchClean = hasDirty ? r1.branch.slice(0, -1) : r1.branch;
-      const prColor = r4.state === "merged" ? "c-magenta" : "c-teal";
-
-      rowsHtml = `
-        <div class="statusline-row"><span class="c-blue">${esc(r1.model)}</span> <span class="c-yellow">${esc(r1.effort)}</span> <span class="c-dim">│</span> <span class="c-cyan">${esc(r1.dir)}</span> <span class="c-green">(${esc(branchClean)}${hasDirty ? `<span class="c-red">*</span>` : ""}${ahead})</span> <span class="c-dim">│</span> <span class="c-white">context</span> ${buildBarHtml(r1.ctxPct, 6)} <span class="c-white">${r1.ctxPct}%</span> <span class="c-dim">│ ⏱</span> <span class="c-white">${esc(r1.duration)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-gem-blue">gemini</span> <span class="c-white">5h</span> ${buildBarHtml(r2.p5, 6)} <span class="c-white">${String(r2.p5).padStart(3, " ")}%</span> <span class="c-dim">${esc(r2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">7d</span> ${buildBarHtml(r2.p7, 6)} <span class="c-white">${String(r2.p7).padStart(3, " ")}%</span> <span class="c-dim">${esc(r2.t7)}</span></div>
-        <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-gem-purple">3p    </span> <span class="c-white">5h</span> ${buildBarHtml(r3.p5, 6)} <span class="c-white">${String(r3.p5).padStart(3, " ")}%</span> <span class="c-dim">${esc(r3.t5)}</span> <span class="c-dim">·</span> <span class="c-white">7d</span> ${buildBarHtml(r3.p7, 6)} <span class="c-white">${String(r3.p7).padStart(3, " ")}%</span> <span class="c-dim">${esc(r3.t7)}</span></div>
-        <div class="statusline-row"><span class="${prColor}">${esc(r4.pr)} ${esc(r4.state)} · ${esc(r4.title)}</span></div>
-      `;
-    } else if (sl.type === "custom-soksak") {
-      logoHtml = renderCustomSvg(sl.type, state.active);
-      rowsHtml = `
-        <div class="statusline-row"><span class="c-teal">${esc(sl.row1.model)}</span> <span class="c-green">${esc(sl.row1.engine)}</span> <span class="c-dim">│</span> <span class="c-white">latency</span> ${buildBarHtml(sl.row1.rtfPct, 6)} <span class="c-white">${esc(sl.row1.rtfLabel)}</span> <span class="c-dim">│</span> <span class="c-cyan">${esc(sl.row1.target)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-teal">${esc(sl.row2.label)}</span> <span class="c-white">voice</span> ${buildBarHtml(sl.row2.p5, 6, "health")} <span class="c-dim">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">floor</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-dim">${esc(sl.row2.t7)}</span></div>
-        <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-teal">${esc(sl.row3.label)}</span> <span class="c-green">${esc(sl.row3.host)}</span> <span class="c-dim">·</span> <span class="c-yellow">${esc(sl.row3.autoEnter)}</span> <span class="c-dim">·</span> <span class="c-white">${esc(sl.row3.vocab)}</span></div>
-      `;
-    } else if (sl.type === "custom-gemini") {
-      logoHtml = renderCustomSvg(sl.type, state.active);
-      rowsHtml = `
-        <div class="statusline-row"><span class="c-gem-blue">${esc(sl.row1.model)}</span> <span class="c-cyan">${esc(sl.row1.proto)}</span> <span class="c-dim">│</span> <span class="c-white">rtt</span> ${buildBarHtml(sl.row1.rttPct, 6)} <span class="c-white">${esc(sl.row1.rttLabel)}</span> <span class="c-dim">│</span> <span class="c-green">${esc(sl.row1.host)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-gem-blue">${esc(sl.row2.label)}</span>  <span class="c-white">sync</span> ${buildBarHtml(sl.row2.p5, 6, "health")} <span class="c-green">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">mounts</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-white">${esc(sl.row2.t7)}</span></div>
-        <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-gem-purple">${esc(sl.row3.label)}</span> <span class="c-white">${esc(sl.row3.compositor)}</span> <span class="c-dim">·</span> <span class="c-teal">${esc(sl.row3.mcp)}</span></div>
-      `;
-    } else if (sl.type === "custom-ts") {
-      logoHtml = renderCustomSvg(sl.type, state.active);
-      rowsHtml = `
-        <div class="statusline-row"><span class="c-teal">${esc(sl.row1.model)}</span> <span class="c-green">${esc(sl.row1.mode)}</span> <span class="c-dim">│</span> <span class="c-white">ttl</span> ${buildBarHtml(sl.row1.ttlPct, 6)} <span class="c-white">${esc(sl.row1.ttlLabel)}</span> <span class="c-dim">│</span> <span class="c-red">${esc(sl.row1.funnel)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-teal">${esc(sl.row2.label)}</span> <span class="c-white">temp</span> ${buildBarHtml(sl.row2.p5, 6)} <span class="c-white">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">keep</span> ${buildBarHtml(sl.row2.p7, 6, "health")} <span class="c-green">${esc(sl.row2.t7)}</span></div>
-        <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-teal">${esc(sl.row3.label)}</span> <span class="c-green">${esc(sl.row3.boot)}</span> <span class="c-dim">·</span> <span class="c-dim">${esc(sl.row3.state)}</span></div>
-      `;
-    } else {
-      logoHtml = renderCustomSvg("custom-herdr", state.active);
-      rowsHtml = `
-        <div class="statusline-row"><span class="c-blue">${esc(sl.row1.model)}</span> <span class="c-yellow">${esc(sl.row1.tag)}</span> <span class="c-dim">│</span> <span class="c-cyan">${esc(sl.row1.dir)}</span> <span class="c-green">(${esc(sl.row1.branch)})</span> <span class="c-dim">│</span> <span class="c-white">context</span> ${buildBarHtml(sl.row1.ctxPct, 6)} <span class="c-white">${sl.row1.ctxPct}%</span> <span class="c-dim">│</span> <span class="c-teal">${esc(sl.row1.extra)}</span></div>
-        <div class="statusline-row"><span class="c-dim">├─</span> <span class="c-clawd">${esc(sl.row2.label)}</span> <span class="c-white">5h</span> ${buildBarHtml(sl.row2.p5, 6)} <span class="c-white">${String(sl.row2.p5).padStart(3, " ")}%</span> <span class="c-dim">${esc(sl.row2.t5)}</span> <span class="c-dim">·</span> <span class="c-white">7d</span> ${buildBarHtml(sl.row2.p7, 6)} <span class="c-white">${String(sl.row2.p7).padStart(3, " ")}%</span> <span class="c-dim">${esc(sl.row2.t7)} · ${esc(sl.row2.extra)}</span></div>
-        <div class="statusline-row"><span class="c-dim">└─</span> <span class="c-gem-blue">${esc(sl.row3.label)}</span> <span class="c-white">5h</span> ${buildBarHtml(sl.row3.p5, 6)} <span class="c-white">${String(sl.row3.p5).padStart(3, " ")}%</span> <span class="c-dim">${esc(sl.row3.t5)}</span> <span class="c-dim">·</span> <span class="c-white">7d</span> ${buildBarHtml(sl.row3.p7, 6)} <span class="c-white">${String(sl.row3.p7).padStart(3, " ")}%</span> <span class="c-dim">${esc(sl.row3.t7)} · ${esc(sl.row3.extra)}</span></div>
-      `;
-    }
-
-    els.statuslineLogoSlot.innerHTML = logoHtml;
-    els.statuslineRows.innerHTML = rowsHtml;
-  }
-
-  function renderTopControls() {
-    els.activeToggleBtn.setAttribute("aria-pressed", state.active ? "true" : "false");
-    els.stateToggleLabel.textContent = state.active ? "working" : "idle";
-    els.langToggleBtn.textContent = state.lang.toUpperCase();
+  function renderPaneList() {
+    const item = getSelectedItem();
+    const media = item.media.filter((m) => m.kind !== "logos").length;
+    const meta = {
+      readme: item.agent,
+      demo: `${item.scenes.length} ${item.scenes.length > 1 ? "scenes" : "scene"}`,
+      media: media ? `${media} ${media > 1 ? "shots" : "shot"}` : "flow",
+    };
+    els.paneList.innerHTML = TABS.map(
+      (tab) => `<button type="button" class="pane-item${state.pane === tab.id ? " is-focused" : ""}" data-tab="${tab.id}">
+        <span class="pi-mark" aria-hidden="true">❯</span><span class="c-muted">${tab.num}</span>
+        <span class="pi-name">${esc(tab[state.lang])}</span><span class="pi-meta">${esc(meta[tab.id])}</span>
+      </button>`
+    ).join("");
   }
 
   function setSidebarOpen(open) {
@@ -1164,41 +798,778 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
     els.sidebar.classList.toggle("is-open", open);
     els.sidebarBackdrop.hidden = !open;
     els.mobileMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) positionSidebarCursor(false);
+  }
+
+  // ── panes ──────────────────────────────────────────────────────
+  function applyPaneVisibility() {
+    const shown = state.zoom || state.pane;
+    if (state.pane !== "readme") state.side = state.pane;
+    els.tiles.querySelectorAll(".pane").forEach((node) => {
+      const name = node.dataset.pane;
+      node.classList.toggle("is-focused", name === state.pane);
+      node.classList.toggle("is-shown", name === shown);
+      node.classList.toggle("is-side", name === state.side);
+    });
+    els.app.dataset.pane = state.pane;
+    document.querySelectorAll("[data-zoom]").forEach((btn) => btn.classList.toggle("is-on", state.zoom === btn.dataset.zoom));
+    renderTabs();
+    renderPaneList();
+    syncCastPlayback();
+    syncArchFlow();
+    updateScrollPositions();
+  }
+
+  function focusPane(pane) {
+    if (!PANES.includes(pane)) return;
+    state.pane = pane;
+    if (state.zoom) state.zoom = pane;
+    applyPaneVisibility();
+  }
+
+  function setZoom(pane) {
+    state.zoom = pane;
+    if (pane) {
+      state.pane = pane;
+      els.app.dataset.zoom = pane;
+    } else {
+      delete els.app.dataset.zoom;
+    }
+    applyPaneVisibility();
+    renderStatusline(getSelectedItem(), 1);
+  }
+
+  function toggleZoom(pane = state.pane) {
+    if (state.layout === "single") return;
+    setZoom(state.zoom === pane ? null : pane);
+  }
+
+  function cyclePane(delta) {
+    const next = PANES[(PANES.indexOf(state.pane) + delta + PANES.length) % PANES.length];
+    focusPane(next);
+  }
+
+  function renderPaneHead(item) {
+    els.paneAgentLabel.textContent = item.agent;
+    els.paneCwd.textContent = item.cwd;
+    els.paneBranchChip.innerHTML = `<span class="g1">⎇</span> ${esc(item.branch)}`;
+    els.paneState.dataset.agent = item.id;
+    els.paneState.className = "state-icon space-state";
+    updateAgentIcons();
+
+    const actions = [];
+    if (item.siteUrl && item.id !== "profile") {
+      actions.push(`<a class="pane-tool is-primary" href="${esc(item.siteUrl)}" target="_blank" rel="noopener noreferrer">site ↗</a>`);
+    }
+    actions.push(`<a class="pane-tool" href="${esc(item.repoUrl)}" target="_blank" rel="noopener noreferrer">github ↗</a>`);
+    actions.push(`<button type="button" class="pane-tool${state.zoom === "readme" ? " is-on" : ""}" data-zoom="readme" title="zoom (z)">zoom</button>`);
+    els.paneBorderActions.innerHTML = actions.join("");
+  }
+
+  function updateScrollPositions() {
+    els.tiles.querySelectorAll(".pane").forEach((pane) => {
+      const body = pane.querySelector(".pane-body");
+      const label = pane.querySelector("[data-scroll-pos]");
+      if (!body || !label) return;
+      const max = body.scrollHeight - body.clientHeight;
+      if (max <= 2) label.textContent = "";
+      else if (body.scrollTop <= 1) label.textContent = "top";
+      else if (body.scrollTop >= max - 1) label.textContent = "bot";
+      else label.textContent = `${Math.round((body.scrollTop / max) * 100)}%`;
+    });
+  }
+
+  // ── readme pane ────────────────────────────────────────────────
+  let typeToken = 0;
+
+  /** Type the echoed command the way a person would, without blocking the content below. */
+  async function typeInto(node, text, total) {
+    const token = ++typeToken;
+    node.textContent = "";
+    const per = Math.max(6, total / Math.max(1, text.length));
+    for (let i = 1; i <= text.length; i += 1) {
+      if (token !== typeToken) return;
+      node.textContent = text.slice(0, i);
+      await sleep(per);
+    }
+  }
+
+  /** Decode-style reveal: noise settles into the title from left to right. */
+  function scramble(node, text) {
+    const glyphs = "!<>-_\\/[]{}=+*^?#";
+    const started = performance.now();
+    const duration = 460;
+    const step = (now) => {
+      if (!node.isConnected) return;
+      const settled = Math.floor(((now - started) / duration) * text.length);
+      if (settled >= text.length) {
+        node.textContent = text;
+        return;
+      }
+      let out = text.slice(0, settled);
+      for (let i = settled; i < text.length; i += 1) {
+        out += text[i] === " " || text[i] === "-" ? text[i] : glyphs[Math.floor(Math.random() * glyphs.length)];
+      }
+      node.textContent = out;
+      window.requestAnimationFrame(step);
+    };
+    window.requestAnimationFrame(step);
+  }
+
+  function block(html, index, delay) {
+    return `<div class="blk paint" style="--i:${index};--d:${delay}ms">${html}</div>`;
+  }
+
+  function fetchBlock() {
+    const rows = [
+      ["os", "omarchy · arch linux"],
+      ["wm", "hyprland · wayland"],
+      ["term", "ghostty · herdr v0.9.5"],
+      ["agents", "claude code · antigravity cli · codex"],
+      ["lang", PROFILE_ENTRY.stack.slice(0, 4).join(" · ")],
+      ["spaces", `${PROJECTS.length} ${L("프로젝트", "projects")}`],
+    ];
+    const swatches = ["--red", "--orange", "--yellow", "--green", "--teal", "--cyan", "--blue", "--magenta"]
+      .map((v) => `<i style="background:var(${v})"></i>`)
+      .join("");
+    return `<div class="fetch">
+      <img class="fetch-avatar" src="https://raw.githubusercontent.com/KyongSik-Yoon/KyongSik-Yoon/main/sam.png" alt="KyongSik Yoon" width="87" height="87" />
+      <div>
+        <dl class="fetch-list">
+          <dt>sam</dt><dd class="c-muted">@omarchy</dd>
+          ${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}
+        </dl>
+        <div class="palette" aria-hidden="true">${swatches}</div>
+      </div>
+    </div>`;
+  }
+
+  function renderReadme(item, animate) {
+    const isProfile = item.id === "profile";
+    const cmdLine = isProfile ? "cat ~/KyongSik-Yoon/README.md && herdr spaces --all" : `cd ${item.cwd} && cat README.md`;
+    const typing = animate && animated();
+    const delay = typing ? 300 : 0;
+    const promptChar = item.installCmd.startsWith("/") ? "❯" : "$";
+    const blocks = [];
+
+    blocks.push(`<div class="echo">
+      <span><span class="echo-host">sam@omarchy</span><span class="c-muted">:</span><span class="c-cyan">${esc(item.cwd)}</span><span class="c-muted">$</span></span>
+      <span class="echo-cmd" data-echo>${esc(cmdLine)}</span>
+    </div>`);
+
+    blocks.push(`<div class="hero">
+      <h1 class="hero-title" data-title>${esc(item.name)}</h1>
+      <div class="hero-sub">${esc(t(item.sub))}</div>
+      <p class="hero-summary">${esc(t(item.summary))}</p>
+      <div class="badges">
+        <span class="badge is-hl">agent:${esc(item.agent)}</span>
+        ${item.stack.map((s) => `<span class="badge">${esc(s)}</span>`).join("")}
+      </div>
+    </div>`);
+
+    if (isProfile) {
+      blocks.push(`<section class="sec">
+        <h2 class="sec-h">${L("프로필", "Profile")}</h2>
+        ${fetchBlock()}
+      </section>`);
+      blocks.push(`<section class="sec">
+        <h2 class="sec-h">${L("AI 토큰 사용량", "AI Usage Telemetry")}</h2>
+        <img class="usage-card" src="https://raw.githubusercontent.com/KyongSik-Yoon/KyongSik-Yoon/main/cards/ai-usage-full.svg" alt="AI usage" width="846" height="225" />
+      </section>`);
+    }
+
+    blocks.push(`<section class="sec">
+      <h2 class="sec-h">${L("핵심 기능", "Key Capabilities")}</h2>
+      <div class="features">
+        ${item.features
+          .map(
+            (f, i) => `<article class="feature">
+              <span class="feature-n">${String(i + 1).padStart(2, "0")}</span>
+              <h3 class="feature-t">${esc(t(f.title))}</h3>
+              <p class="feature-d">${esc(t(f.desc))}</p>
+            </article>`
+          )
+          .join("")}
+      </div>
+    </section>`);
+
+    blocks.push(`<section class="sec">
+      <h2 class="sec-h">${L("설치 및 실행", "Install & Quickstart")}</h2>
+      <div class="box">
+        <div class="box-h">
+          <span>${esc(item.cliBlockTitle)}</span>
+          <button type="button" class="copy-btn" data-copy="${esc(item.installCmd)}">⧉ copy</button>
+        </div>
+        <pre class="pre wrap"><span class="c-green">${promptChar}</span> ${highlightCommand(item.installCmd)}</pre>
+      </div>
+      <div class="c-muted">
+        ${L("이어 보기", "next")}:
+        <button type="button" class="link" data-tab="demo">2 demo</button> ·
+        <button type="button" class="link" data-tab="media">3 media</button> ·
+        <button type="button" class="link" data-cmd="help">help</button>
+      </div>
+    </section>`);
+
+    els.term.innerHTML = blocks.map((html, i) => block(html, i, i === 0 ? 0 : delay)).join("");
+    els.terminalScroll.scrollTop = 0;
+
+    if (typing) {
+      typeInto(els.term.querySelector("[data-echo]"), cmdLine, 260);
+      window.setTimeout(() => {
+        const title = els.term.querySelector("[data-title]");
+        if (title && getSelectedItem() === item) scramble(title, item.name);
+      }, delay);
+    }
+  }
+
+  /** Append shell output to the scrollback and follow it. */
+  function print(html, echo) {
+    const count = els.term.children.length;
+    const wrap = document.createElement("div");
+    wrap.className = "blk paint";
+    wrap.style.setProperty("--i", "0");
+    wrap.innerHTML =
+      (echo !== undefined
+        ? `<div class="echo"><span class="prompt-chevron">❯</span><span class="echo-cmd">${esc(echo)}</span></div>`
+        : "") + html;
+    els.term.appendChild(wrap);
+    if (count > 60) els.term.removeChild(els.term.children[1]);
+    if (!isPaneVisible("readme")) focusPane("readme");
+    els.terminalScroll.scrollTo({ top: els.terminalScroll.scrollHeight, behavior: animated() ? "smooth" : "auto" });
+    updateScrollPositions();
+  }
+
+  // ── demo pane: terminal casts and the real recording ───────────
+  function highlightCommand(text) {
+    const hash = text.search(/\s#\s/);
+    const body = hash >= 0 ? text.slice(0, hash) : text;
+    const comment = hash >= 0 ? text.slice(hash) : "";
+    const html = esc(body)
+      .replace(/(&quot;[^&]*?&quot;)/g, '<span class="c-green">$1</span>')
+      .replace(/(^|\s)(--?[a-zA-Z][\w-]*)/g, '$1<span class="c-yellow">$2</span>')
+      .replace(/(&amp;&amp;|\|)/g, '<span class="c-muted">$1</span>')
+      .replace(/^([./\w-]+)/, '<span class="c-white t-b">$1</span>');
+    return html + (comment ? `<span class="c-muted">${esc(comment)}</span>` : "");
+  }
+
+  function highlightOutput(text) {
+    return esc(text).replace(
+      /(https?:\/\/[^\s)]+)|(^\[[+*!]\])|(^\[[a-z]+\])|(✓)|(✕|DENY|BLOCKED)|(●)|(◆)|(\s#\s.*$)|\b(enabled|configured|ALLOW|merged)\b/g,
+      (m, url, mark, tag, ok, bad, dot, diamond, comment, good) => {
+        if (url) return `<span class="c-cyan">${m}</span>`;
+        if (mark) return `<span class="${m === "[+]" ? "c-green" : m === "[!]" ? "c-yellow" : "c-blue"}">${m}</span>`;
+        if (tag) return `<span class="c-teal">${m}</span>`;
+        if (ok || dot || good) return `<span class="c-green">${m}</span>`;
+        if (bad) return `<span class="c-red">${m}</span>`;
+        if (diamond) return `<span class="c-yellow">${m}</span>`;
+        if (comment) return `<span class="c-muted">${m}</span>`;
+        return m;
+      }
+    );
+  }
+
+  /** A cast is a list of steps: a typed command, or a burst of output lines. */
+  function castSteps(item, scene) {
+    const promptChar = scene.prompt || "$";
+    if (scene.capture) {
+      return [
+        { type: "cmd", prompt: promptChar, text: scene.cmd },
+        { type: "out", lines: (CAPTURES[scene.capture] || "").split("\n") },
+      ];
+    }
+    const steps = [];
+    let pending = [];
+    const flush = () => {
+      if (pending.length) steps.push({ type: "out", lines: pending });
+      pending = [];
+    };
+    for (const line of item.cliSnippet.split("\n")) {
+      const isCommand = line.startsWith("$ ") || (promptChar !== "$" && line.startsWith("/"));
+      if (isCommand) {
+        flush();
+        steps.push({ type: "cmd", prompt: promptChar, text: line.replace(/^\$ /, "") });
+      } else {
+        pending.push(highlightOutput(line));
+      }
+    }
+    flush();
+    return steps;
+  }
+
+  const cast = { run: 0, steps: [], screen: null, paused: false, userPaused: false, pending: false, finished: false, loopTimer: 0 };
+
+  function castLine(html, fresh) {
+    const node = document.createElement("div");
+    node.className = fresh ? "cl is-new" : "cl";
+    node.innerHTML = html || " ";
+    cast.screen.appendChild(node);
+    cast.screen.scrollTop = cast.screen.scrollHeight;
+    return node;
+  }
+
+  function setCastProgress(done) {
+    const total = cast.steps.length;
+    if (!total) {
+      els.demoProgress.textContent = "";
+      return;
+    }
+    els.demoProgress.textContent = `${"█".repeat(done)}${"░".repeat(total - done)} ${done}/${total}`;
+  }
+
+  function updateCastButton() {
+    const btn = els.demoBody.querySelector('.cast-btn[data-cast="toggle"]');
+    if (!btn) return;
+    btn.textContent = cast.finished ? "⟳ replay" : cast.paused ? "▶ play" : "‖ pause";
+  }
+
+  function drawCastStatic() {
+    cast.run += 1;
+    window.clearTimeout(cast.loopTimer);
+    cast.screen.innerHTML = "";
+    for (const step of cast.steps) {
+      if (step.type === "cmd") castLine(`<span class="c-green">${step.prompt}</span> ${highlightCommand(step.text)}`, false);
+      else step.lines.forEach((line) => castLine(line, false));
+    }
+    cast.screen.scrollTop = 0;
+    cast.finished = true;
+    setCastProgress(cast.steps.length);
+    updateCastButton();
+  }
+
+  /** Wait, but hold the clock while the cast is paused; false once this run was replaced. */
+  async function castWait(ms, run) {
+    let left = ms;
+    while (left > 0 || cast.paused) {
+      await sleep(30);
+      if (run !== cast.run) return false;
+      if (!cast.paused) left -= 30;
+    }
+    return run === cast.run;
+  }
+
+  async function playCast() {
+    const run = ++cast.run;
+    window.clearTimeout(cast.loopTimer);
+    cast.finished = false;
+    cast.screen.innerHTML = "";
+    setCastProgress(0);
+    updateCastButton();
+
+    for (let i = 0; i < cast.steps.length; i += 1) {
+      const step = cast.steps[i];
+      if (step.type === "cmd") {
+        const line = castLine(`<span class="c-green">${step.prompt}</span> <span data-typed></span><span class="cursor"></span>`, false);
+        const typed = line.querySelector("[data-typed]");
+        if (!(await castWait(i === 0 ? 350 : 520, run))) return;
+        const per = Math.min(26, 1100 / step.text.length);
+        for (let c = 1; c <= step.text.length; c += 1) {
+          typed.textContent = step.text.slice(0, c);
+          if (!(await castWait(per, run))) return;
+        }
+        if (!(await castWait(240, run))) return;
+        line.innerHTML = `<span class="c-green">${step.prompt}</span> ${highlightCommand(step.text)}`;
+      } else {
+        const per = Math.min(55, 900 / step.lines.length);
+        for (const text of step.lines) {
+          castLine(text, true);
+          if (!(await castWait(per, run))) return;
+        }
+      }
+      setCastProgress(i + 1);
+    }
+
+    castLine(`<span class="c-green">${cast.steps[0] ? cast.steps[0].prompt : "$"}</span> <span class="cursor"></span>`, false);
+    cast.finished = true;
+    updateCastButton();
+    cast.loopTimer = window.setTimeout(() => {
+      if (run === cast.run && animated() && isPaneVisible("demo") && !document.hidden) playCast();
+    }, 7000);
+  }
+
+  function startCast() {
+    if (!cast.screen) return;
+    cast.paused = false;
+    cast.userPaused = false;
+    cast.pending = false;
+    if (!animated()) drawCastStatic();
+    else if (isPaneVisible("demo")) playCast();
+    else {
+      // Hidden behind another pane: play from the top the moment it is shown.
+      cast.pending = true;
+      cast.screen.innerHTML = "";
+      setCastProgress(0);
+    }
+  }
+
+  /** Called when the demo pane is shown or hidden, or the agents go idle. */
+  function syncCastPlayback() {
+    if (!cast.screen || !cast.screen.isConnected) return;
+    if (!animated()) {
+      if (!cast.finished) drawCastStatic();
+      return;
+    }
+    const visible = isPaneVisible("demo");
+    if (visible && cast.pending) {
+      cast.pending = false;
+      playCast();
+      return;
+    }
+    if (!visible) cast.paused = true;
+    else if (!cast.userPaused) cast.paused = false;
+    updateCastButton();
+  }
+
+  function currentScene(item) {
+    return item.scenes.find((s) => s.id === state.scene[item.id]) || item.scenes[0];
+  }
+
+  function renderDemo(item) {
+    cast.run += 1;
+    window.clearTimeout(cast.loopTimer);
+    cast.screen = null;
+    cast.steps = [];
+    cast.userPaused = false;
+    cast.pending = false;
+
+    const scene = currentScene(item);
+    els.demoTitle.textContent = scene.title;
+    const tabs =
+      item.scenes.length > 1
+        ? `<div class="scene-tabs" role="tablist">${item.scenes
+            .map(
+              (s) =>
+                `<button type="button" role="tab" class="scene-tab${s === scene ? " is-active" : ""}" data-scene="${esc(s.id)}" aria-selected="${s === scene}">${esc(s.title)}</button>`
+            )
+            .join("")}</div>`
+        : "";
+
+    if (scene.kind === "video") {
+      els.demoProgress.textContent = "";
+      els.demoBody.innerHTML = `${tabs}
+        <div class="video-wrap paint">
+          <video controls muted loop playsinline preload="none" poster="${esc(scene.poster)}" width="${scene.w}" height="${scene.h}"
+            aria-label="${esc(item.name)} demo">
+            <source src="${esc(scene.src)}" type="video/mp4" />
+          </video>
+        </div>
+        <div class="cast-bar"><span class="cast-note">${esc(t(scene.note))}</span></div>`;
+      return;
+    }
+
+    els.demoBody.innerHTML = `${tabs}
+      <div class="cast" data-cast="toggle" title="${L("눌러서 멈춤/재생", "click to pause or play")}"></div>
+      <div class="cast-bar">
+        <button type="button" class="cast-btn" data-cast="toggle">‖ pause</button>
+        <button type="button" class="cast-btn" data-cast="restart">⟳</button>
+        <span class="cast-note">${esc(t(scene.note))}</span>
+      </div>`;
+    cast.screen = els.demoBody.querySelector(".cast");
+    cast.steps = castSteps(item, scene);
+    startCast();
+  }
+
+  // ── media pane: flow diagram, real shots, captured screens ─────
+  let archTimer = 0;
+
+  /** A packet walks the pipeline: one node lights up after another. */
+  function syncArchFlow() {
+    window.clearInterval(archTimer);
+    const nodes = Array.from(els.mediaBody.querySelectorAll(".arch li"));
+    nodes.forEach((n) => n.classList.remove("is-lit"));
+    if (!nodes.length || !animated() || !isPaneVisible("media")) return;
+    let tick = 0;
+    archTimer = window.setInterval(() => {
+      if (document.hidden) return;
+      const at = tick % (nodes.length + 2);
+      nodes.forEach((n, i) => n.classList.toggle("is-lit", i === at));
+      tick += 1;
+    }, 620);
+  }
+
+  function fileName(src) {
+    return src.split("/").pop();
+  }
+
+  function mediaTile(item, m, index) {
+    const cap = esc(t(m.caption));
+    if (m.kind === "logos") {
+      return `<div class="logos">${m.items
+        .map(
+          (logo, i) => `<div class="logo-chip" style="--i:${i}">
+            <img src="${esc(logo.src)}" alt="" width="64" height="64" loading="lazy" />
+            <div><b>${esc(logo.name)}</b><span>${esc(logo.sub)}</span></div>
+          </div>`
+        )
+        .join("")}</div>`;
+    }
+    if (m.kind === "screen") {
+      return `<button type="button" class="shot is-wide" data-media="${index}">
+        <span class="shot-h"><span>${esc(m.title)}</span><span>${m.cols} cols · real</span></span>
+        <span class="shot-frame screen-wrap" style="--cols:${m.cols}"><span class="screen">${CAPTURES[m.capture] || ""}</span></span>
+        <span class="shot-cap">${cap}</span>
+      </button>`;
+    }
+    const svg = m.src.endsWith(".svg");
+    const wide = m.w / m.h > 3;
+    return `<button type="button" class="shot${wide ? " is-wide" : ""}" data-media="${index}">
+      <span class="shot-h"><span>${esc(fileName(m.src))}</span><span>${m.w}×${m.h}</span></span>
+      <span class="shot-frame${svg ? " is-svg" : ""}"><img src="${esc(m.src)}" alt="${cap}" width="${m.w}" height="${m.h}" loading="lazy" decoding="async" data-reveal /></span>
+      <span class="shot-cap">${cap}</span>
+    </button>`;
+  }
+
+  function renderMedia(item) {
+    const shots = item.media.filter((m) => m.kind !== "logos");
+    const logos = item.media.filter((m) => m.kind === "logos");
+    els.mediaTitle.textContent = shots.length ? `${shots.length} ${shots.length > 1 ? "shots" : "shot"}` : "flow";
+
+    const blocks = [];
+    blocks.push(`<section class="sec">
+      <h2 class="sec-h">${L("동작 흐름", "Architecture Flow")}</h2>
+      <div class="arch-wrap">
+        <div class="arch-logo">${renderLogo(item, "arch")}</div>
+        <ol class="arch">${item.archNodes.map((node) => `<li>${esc(node)}</li>`).join("")}</ol>
+      </div>
+    </section>`);
+
+    logos.forEach((m) => {
+      blocks.push(`<section class="sec"><h2 class="sec-h">${esc(t(m.caption))}</h2>${mediaTile(item, m, -1)}</section>`);
+    });
+
+    if (shots.length) {
+      blocks.push(`<section class="sec">
+        <h2 class="sec-h">${L("화면", "Screens")} · ${shots.length}</h2>
+        <div class="gallery">${item.media.map((m, i) => (m.kind === "logos" ? "" : mediaTile(item, m, i))).join("")}</div>
+      </section>`);
+    } else {
+      blocks.push(
+        `<div class="media-note">${L(
+          "이 프로젝트는 아직 스크린샷이 없습니다 — 자세한 동작은 저장소 README 에 있습니다.",
+          "No screenshots for this project yet — the repository README has the details."
+        )}</div>`
+      );
+    }
+
+    els.mediaBody.innerHTML = `<div class="media">${blocks.map((html, i) => block(html, i, 0)).join("")}</div>`;
+    els.mediaBody.scrollTop = 0;
+    els.mediaBody.querySelectorAll("img[data-reveal]").forEach(revealImage);
+    syncArchFlow();
+  }
+
+  /** Images resolve out of big pixels, the way a terminal image protocol paints a picture in. */
+  function revealImage(img) {
+    if (!animated()) return;
+    const frame = img.parentElement;
+    const run = () => {
+      if (!img.naturalWidth || !frame.isConnected) return;
+      const canvas = document.createElement("canvas");
+      const ratio = img.naturalHeight / img.naturalWidth;
+      canvas.width = 160;
+      canvas.height = Math.max(1, Math.round(160 * ratio));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      frame.appendChild(canvas);
+      const small = document.createElement("canvas");
+      const sctx = small.getContext("2d");
+      const widths = [6, 12, 24, 48, 96];
+      let i = 0;
+      const step = () => {
+        if (!canvas.isConnected) return;
+        if (i >= widths.length) {
+          canvas.remove();
+          return;
+        }
+        small.width = widths[i];
+        small.height = Math.max(1, Math.round(widths[i] * ratio));
+        try {
+          sctx.drawImage(img, 0, 0, small.width, small.height);
+          ctx.imageSmoothingEnabled = false;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
+        } catch (e) {
+          canvas.remove();
+          return;
+        }
+        i += 1;
+        window.setTimeout(step, 70);
+      };
+      step();
+    };
+    if (img.complete && img.naturalWidth) run();
+    else img.addEventListener("load", run, { once: true });
+  }
+
+  // ── lightbox ───────────────────────────────────────────────────
+  const lightbox = { index: -1, returnFocus: null };
+
+  function lightboxItems() {
+    return getSelectedItem().media.map((m, i) => ({ m, i })).filter(({ m }) => m.kind !== "logos");
+  }
+
+  function showLightbox(index) {
+    const item = getSelectedItem();
+    const m = item.media[index];
+    if (!m) return;
+    if (els.lightbox.hidden) lightbox.returnFocus = document.activeElement;
+    lightbox.index = index;
+    const list = lightboxItems();
+    const pos = list.findIndex((entry) => entry.i === index) + 1;
+    els.lbTitle.textContent = `${item.name} · ${m.kind === "screen" ? "tui capture" : fileName(m.src)} · ${pos}/${list.length}`;
+    els.lbCaption.textContent = t(m.caption);
+    if (m.href) {
+      els.lbOpen.hidden = false;
+      els.lbOpen.href = m.href;
+    } else {
+      els.lbOpen.hidden = true;
+    }
+    els.lbStage.innerHTML =
+      m.kind === "screen"
+        ? `<div class="screen-wrap" style="--cols:${m.cols}"><div class="screen">${CAPTURES[m.capture] || ""}</div></div>`
+        : `<img src="${esc(m.src)}" alt="${esc(t(m.caption))}" width="${m.w}" height="${m.h}"${m.src.endsWith(".svg") ? ' class="is-svg"' : ""} />`;
+    els.lightbox.hidden = false;
+    $("lb-close").focus();
+  }
+
+  function moveLightbox(delta) {
+    const list = lightboxItems();
+    const at = list.findIndex((entry) => entry.i === lightbox.index);
+    if (at < 0) return;
+    showLightbox(list[(at + delta + list.length) % list.length].i);
+  }
+
+  function closeLightbox() {
+    if (els.lightbox.hidden) return;
+    els.lightbox.hidden = true;
+    els.lbStage.innerHTML = "";
+    if (lightbox.returnFocus && lightbox.returnFocus.isConnected) lightbox.returnFocus.focus();
+  }
+
+  // ── selection ──────────────────────────────────────────────────
+  function renderSpace(animate) {
+    const item = getSelectedItem();
+    renderPaneHead(item);
+    renderReadme(item, animate);
+    renderDemo(item);
+    renderMedia(item);
+    renderPaneList();
+    if (animate) sweepStatusline(item);
+    else {
+      els.statuslineLogoSlot.innerHTML = renderLogo(item, "sl");
+      renderStatusline(item, 1);
+    }
+    updateScrollPositions();
+    document.title = item.id === "profile" ? "KyongSik Yoon — Herdr Workspace Showcase" : `${item.name} — KyongSik Yoon`;
   }
 
   function selectItem(id, updateHash = true) {
     if (!ALL_ITEMS.some((it) => it.id === id)) return;
+    setSidebarOpen(false);
+    if (id === state.selectedId) return;
     state.selectedId = id;
+    state.ctxDrift = 0;
+    state.minutes = 0;
+    if (state.active) state.agents[id] = "working";
     if (updateHash && window.location.hash !== `#${id}`) {
       history.replaceState(null, "", `#${id}`);
     }
-    setSidebarOpen(false);
-    render();
+    updateSidebarSelection();
+    renderSpace(true);
   }
+
+  function setLang(lang) {
+    state.lang = lang;
+    store.set("lang", lang);
+    renderTopControls();
+    renderTabs();
+    renderSidebar();
+    renderSpace(false);
+  }
+
+  function setActive(active) {
+    state.active = active;
+    renderTopControls();
+    updateAgentIcons();
+    const item = getSelectedItem();
+    els.statuslineLogoSlot.innerHTML = renderLogo(item, "sl");
+    const archLogo = els.mediaBody.querySelector(".arch-logo");
+    if (archLogo) archLogo.innerHTML = renderLogo(item, "arch");
+    syncCastPlayback();
+    if (active && cast.screen && cast.finished) startCast();
+    syncArchFlow();
+  }
+
+  // ── shell ──────────────────────────────────────────────────────
+  let feedbackTimer = 0;
 
   function setPromptFeedback(msg) {
     els.promptFeedback.textContent = msg;
-    if (!msg) return;
-    window.setTimeout(() => {
-      if (els.promptFeedback.textContent === msg) {
-        els.promptFeedback.textContent = "";
-      }
-    }, 3200);
+    window.clearTimeout(feedbackTimer);
+    if (msg) feedbackTimer = window.setTimeout(() => (els.promptFeedback.textContent = ""), 3200);
+  }
+
+  const COMMANDS = {
+    help: () => L("이 도움말", "this help"),
+    ls: () => L("프로젝트 목록", "list the projects"),
+    "open <name>": () => L("프로젝트 열기 (cd 도 같음)", "open a project (cd works too)"),
+    profile: () => L("프로필 홈", "profile home"),
+    "tab <readme|demo|media>": () => L("패인 이동", "move to a pane"),
+    zoom: () => L("지금 패인 확대/복귀", "zoom the focused pane"),
+    "theme [name]": () => THEMES.join(" · "),
+    crt: () => L("CRT 스캔라인 켜기/끄기", "toggle the CRT scanlines"),
+    "ko / en": () => L("표시 언어", "display language"),
+    toggle: () => L("에이전트 working / idle", "agents working / idle"),
+    fetch: () => L("시스템 요약", "system summary"),
+    keys: () => L("단축키", "keyboard shortcuts"),
+    "github / site": () => L("저장소·사이트 열기", "open the repo or the site"),
+    clear: () => L("화면 지우기", "clear the screen"),
+  };
+
+  const COMMAND_WORDS = [
+    "help", "ls", "open", "cd", "profile", "tab", "pane", "zoom", "theme", "crt", "ko", "en", "lang",
+    "toggle", "fetch", "neofetch", "keys", "github", "site", "clear", "whoami", "history", "date", "echo",
+  ];
+
+  function findItem(arg) {
+    const q = arg.toLowerCase();
+    if (!q) return null;
+    if (q === "~" || q === "home" || q === "profile") return PROFILE_ENTRY;
+    const n = Number(q);
+    if (Number.isInteger(n) && n >= 1 && n <= PROJECTS.length) return PROJECTS[n - 1];
+    return (
+      ALL_ITEMS.find((it) => it.id.toLowerCase() === q) ||
+      ALL_ITEMS.find((it) => it.id.toLowerCase().startsWith(q)) ||
+      ALL_ITEMS.find((it) => it.name.toLowerCase().includes(q)) ||
+      null
+    );
   }
 
   function handleCommand(raw) {
     const cmd = raw.trim();
     if (!cmd) return;
+    state.history.push(cmd);
+    state.historyIndex = state.history.length;
     const parts = cmd.split(/\s+/);
     const head = parts[0].toLowerCase();
-    const arg = parts.slice(1).join(" ").toLowerCase();
+    const arg = parts.slice(1).join(" ");
+    const argLower = arg.toLowerCase();
 
     if (head === "help" || head === "?") {
-      setPromptFeedback("cmds: open <name>, profile, toggle, ko/en, github, site");
+      print(
+        `<div class="out-table">${Object.entries(COMMANDS)
+          .map(([name, desc]) => `<span>${esc(name)}</span><span class="c-dim">${esc(desc())}</span>`)
+          .join("")}</div>`,
+        cmd
+      );
       return;
     }
     if (head === "ls") {
-      setPromptFeedback(PROJECTS.map((p) => p.id).join(" · "));
+      print(
+        `<div class="out-table">${PROJECTS.map(
+          (p, i) =>
+            `<button type="button" class="link" data-select-id="${esc(p.id)}">${i + 1} ${esc(p.name)}/</button><span class="c-dim">${esc(t(p.sub))}</span>`
+        ).join("")}</div>`,
+        cmd
+      );
       return;
     }
     if (head === "profile" || head === "home" || head === "~") {
@@ -1206,16 +1577,55 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
       setPromptFeedback("switched -> profile");
       return;
     }
+    if (head === "open" || head === "cd") {
+      const match = findItem(argLower.replace(/^~\/dev\/git-repo\//, "").replace(/\/$/, ""));
+      if (match) {
+        selectItem(match.id);
+        setPromptFeedback(`opened ${match.name}`);
+      } else {
+        print(`<div class="c-red">cd: no such space: ${esc(arg || "(none)")}</div><div class="c-dim">${L("ls 로 목록을 볼 수 있습니다.", "try ls for the list.")}</div>`, cmd);
+      }
+      return;
+    }
+    if (head === "tab" || head === "pane") {
+      const target = PANES.find((p) => p === argLower) || PANES[Number(argLower) - 1];
+      if (target) {
+        focusPane(target);
+        setPromptFeedback(`pane: ${target}`);
+      } else {
+        print(`<div class="c-red">tab: ${esc(arg || "?")} — readme · demo · media</div>`, cmd);
+      }
+      return;
+    }
+    if (head === "zoom") {
+      if (state.layout === "single") setPromptFeedback(L("이 폭에서는 이미 한 패인입니다", "already a single pane at this width"));
+      else toggleZoom();
+      return;
+    }
+    if (head === "theme") {
+      if (!argLower) {
+        cycleTheme();
+      } else if (setTheme(argLower)) {
+        setPromptFeedback(`theme: ${argLower}`);
+      } else {
+        print(`<div class="c-red">theme: ${esc(arg)} — ${THEMES.join(" · ")}</div>`, cmd);
+      }
+      return;
+    }
+    if (head === "crt") {
+      setCrt(argLower === "on" ? true : argLower === "off" ? false : !state.crt);
+      setPromptFeedback(`crt: ${state.crt ? "on" : "off"}`);
+      return;
+    }
     if (head === "toggle" || head === "anim") {
-      state.active = !state.active;
-      render();
+      setActive(!state.active);
       setPromptFeedback(`status: ${state.active ? "working" : "idle"}`);
       return;
     }
-    if (head === "ko" || head === "en") {
-      state.lang = head;
-      render();
-      setPromptFeedback(`lang: ${head.toUpperCase()}`);
+    if (head === "ko" || head === "en" || head === "lang") {
+      const lang = head === "lang" ? (argLower === "en" ? "en" : argLower === "ko" ? "ko" : state.lang === "ko" ? "en" : "ko") : head;
+      setLang(lang);
+      setPromptFeedback(`lang: ${lang.toUpperCase()}`);
       return;
     }
     if (head === "github") {
@@ -1224,52 +1634,238 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
       return;
     }
     if (head === "site") {
-      const target = getSelectedItem().siteUrl || getSelectedItem().repoUrl;
-      window.open(target, "_blank", "noopener,noreferrer");
+      window.open(getSelectedItem().siteUrl || getSelectedItem().repoUrl, "_blank", "noopener,noreferrer");
       setPromptFeedback("opened site ↗");
       return;
     }
-    if (head === "open" || head === "cd") {
-      const match = ALL_ITEMS.find(
-        (it) => it.id.toLowerCase() === arg || it.name.toLowerCase().includes(arg)
-      );
-      if (match) {
-        selectItem(match.id);
-        setPromptFeedback(`opened ${match.name}`);
-      } else {
-        setPromptFeedback(`unknown space: ${arg}`);
-      }
+    if (head === "clear") {
+      renderReadme(getSelectedItem(), false);
       return;
     }
-    const direct = ALL_ITEMS.find((it) => it.id.toLowerCase() === head);
-    if (direct) {
+    if (head === "fetch" || head === "neofetch" || head === "fastfetch") {
+      print(fetchBlock(), cmd);
+      return;
+    }
+    if (head === "whoami") {
+      print(`<div>sam <span class="c-dim">— KyongSik Yoon · ${esc(t(PROFILE_ENTRY.sub))}</span></div>`, cmd);
+      return;
+    }
+    if (head === "keys") {
+      print(`<div class="wk-grid">${keyRows(false)}</div>`, cmd);
+      return;
+    }
+    if (head === "history") {
+      print(`<div>${state.history.map((h, i) => `<div><span class="c-muted">${String(i + 1).padStart(3, " ")}</span>  ${esc(h)}</div>`).join("")}</div>`, cmd);
+      return;
+    }
+    if (head === "date") {
+      print(`<div>${esc(new Date().toString())}</div>`, cmd);
+      return;
+    }
+    if (head === "echo") {
+      print(`<div>${esc(arg)}</div>`, cmd);
+      return;
+    }
+    const direct = findItem(head);
+    if (direct && parts.length === 1) {
       selectItem(direct.id);
       setPromptFeedback(`opened ${direct.name}`);
       return;
     }
-    setPromptFeedback(`unknown cmd '${head}' (try 'help')`);
+    print(`<div class="c-red">zsh: command not found: ${esc(head)}</div><div class="c-dim">${L("help 를 입력해 보세요.", "try help.")}</div>`, cmd);
   }
 
-  function render() {
-    const item = getSelectedItem();
-    renderTopControls();
-    renderTabs();
-    renderSidebar();
-    renderPaneBorder(item);
-    renderTerminalBody(item);
-    renderStatusline(item);
-  }
-
-  function syncFromHash() {
-    const hash = window.location.hash.replace(/^#/, "").trim();
-    if (hash && ALL_ITEMS.some((it) => it.id === hash)) {
-      state.selectedId = hash;
+  function completeInput() {
+    const value = els.cmdInput.value;
+    const parts = value.split(/\s+/);
+    let pool = COMMAND_WORDS;
+    if (parts.length > 1) {
+      const head = parts[0].toLowerCase();
+      if (head === "open" || head === "cd") pool = ALL_ITEMS.map((it) => it.id);
+      else if (head === "theme") pool = THEMES;
+      else if (head === "tab" || head === "pane") pool = PANES;
+      else if (head === "crt") pool = ["on", "off"];
+      else return;
     }
+    const last = parts[parts.length - 1].toLowerCase();
+    const hits = pool.filter((word) => word.startsWith(last));
+    if (hits.length === 1) {
+      parts[parts.length - 1] = hits[0];
+      els.cmdInput.value = `${parts.join(" ")} `;
+    } else if (hits.length > 1) {
+      setPromptFeedback(hits.slice(0, 6).join("  "));
+    }
+  }
+
+  // ── which-key ──────────────────────────────────────────────────
+  const KEYS = [
+    ["1–6", () => L("프로젝트 열기", "open a project"), false],
+    ["0 ~", () => L("프로필", "profile"), false],
+    ["j k", () => L("다음·이전 스페이스", "next / previous space"), false],
+    ["alt+←→", () => L("패인 이동", "move between panes"), false],
+    ["alt+1–3", () => L("패인 선택", "pick a pane"), false],
+    ["z", () => L("패인 확대", "zoom the pane"), true],
+    ["t", () => L("테마 바꾸기", "next theme"), true],
+    ["c", () => L("CRT 효과", "CRT effect"), true],
+    ["l", () => L("언어 전환", "switch language"), true],
+    ["b", () => L("사이드바", "sidebar"), true],
+    ["w", () => L("working / idle", "working / idle"), true],
+    ["1 2 3", () => L("패인 선택", "pick a pane"), "prefix"],
+    ["/", () => L("스페이스 검색", "filter spaces"), false],
+    [":", () => L("명령 입력", "command line"), true],
+    ["C-a", () => L("프리픽스", "prefix"), false],
+    ["?", () => L("이 표", "this table"), false],
+  ];
+
+  function keyRows(prefixOnly) {
+    return KEYS.filter(([, , inPrefix]) => (prefixOnly ? inPrefix : inPrefix !== "prefix"))
+      .map(([key, label]) => `<div><kbd>${esc(key)}</kbd><span>${esc(label())}</span></div>`)
+      .join("");
+  }
+
+  const prefix = { armed: false, timer: 0 };
+
+  function showWhichKey(prefixMode) {
+    els.whichkey.innerHTML = `<div class="wk-title">${prefixMode ? "prefix C-a —" : L("단축키", "keys")}</div><div class="wk-grid">${keyRows(prefixMode)}</div>`;
+    els.whichkey.hidden = false;
+  }
+
+  function hideWhichKey() {
+    prefix.armed = false;
+    window.clearTimeout(prefix.timer);
+    els.whichkey.hidden = true;
+  }
+
+  function armPrefix() {
+    prefix.armed = true;
+    showWhichKey(true);
+    window.clearTimeout(prefix.timer);
+    prefix.timer = window.setTimeout(hideWhichKey, 3000);
+  }
+
+  /** Keys that work both after the prefix and bare. */
+  function runSharedKey(key) {
+    if (key === "z") toggleZoom();
+    else if (key === "t") cycleTheme();
+    else if (key === "c") {
+      setCrt(!state.crt);
+      setPromptFeedback(`crt: ${state.crt ? "on" : "off"}`);
+    } else if (key === "l") setLang(state.lang === "ko" ? "en" : "ko");
+    else if (key === "b") {
+      if (els.app.dataset.sidebar === "drawer") setSidebarOpen(!state.sidebarOpen);
+    } else if (key === "w") setActive(!state.active);
+    else if (key === ":") els.cmdInput.focus();
+    else return false;
+    return true;
+  }
+
+  // ── agents: a little life in the sidebar ───────────────────────
+  let spinFrame = 0;
+
+  function tickSpinner() {
+    if (!state.active || document.hidden) return;
+    spinFrame = (spinFrame + 1) % SPINNER.length;
+    const glyph = SPINNER[spinFrame];
+    document.querySelectorAll("[data-spin]").forEach((node) => {
+      node.textContent = glyph;
+    });
+  }
+
+  function toast(item) {
+    while (els.toasts.children.length) els.toasts.firstChild.remove();
+    const node = document.createElement("button");
+    node.type = "button";
+    node.className = "toast";
+    node.setAttribute("data-select-id", item.id);
+    node.innerHTML = `<b>✓ ${esc(item.agent)}</b> ${L("작업을 마쳤습니다", "finished")}<small>${esc(item.name)} · ${L("눌러서 열기", "open")}</small>`;
+    els.toasts.appendChild(node);
+    window.setTimeout(() => {
+      node.classList.add("is-out");
+      window.setTimeout(() => node.remove(), 320);
+    }, 4600);
+  }
+
+  function tickAgents() {
+    if (!animated() || document.hidden) return;
+    const others = ALL_ITEMS.filter((it) => it.id !== state.selectedId);
+    const item = others[Math.floor(Math.random() * others.length)];
+    const current = state.agents[item.id] || "idle";
+    if (current === "working") {
+      state.agents[item.id] = "done";
+      if (els.lightbox.hidden) toast(item);
+    } else {
+      state.agents[item.id] = "working";
+    }
+    updateAgentIcons();
+  }
+
+  function tickStatusline() {
+    if (!animated() || document.hidden) return;
+    state.ctxDrift = state.ctxDrift >= 9 ? 0 : state.ctxDrift + 1;
+    renderStatusline(getSelectedItem(), 1);
+  }
+
+  // ── boot ───────────────────────────────────────────────────────
+  async function boot() {
+    let seen = false;
+    try {
+      seen = window.sessionStorage.getItem("herdr.booted") === "1";
+      window.sessionStorage.setItem("herdr.booted", "1");
+    } catch (e) {
+      seen = false;
+    }
+    if (seen || reduceMotion.matches) return;
+
+    const lines = [
+      `<span class="c-white">ghostty</span> · xterm-ghostty · ${state.cols}×${state.rows}`,
+      `<span class="c-green">$</span> <span class="c-white">herdr</span>`,
+      `herdr v0.9.5 — attaching session <span class="c-cyan">main</span>`,
+      `  <span class="c-green">✓</span> spaces   ${ALL_ITEMS.length} restored`,
+      `  <span class="c-green">✓</span> agents   ${[...new Set(ALL_ITEMS.map((it) => it.agent))].join(" · ")}`,
+      `  <span class="c-green">✓</span> layout   ${state.layout}`,
+    ];
+    els.boot.hidden = false;
+    let skipped = false;
+    const skip = () => {
+      skipped = true;
+    };
+    window.addEventListener("keydown", skip, { once: true });
+    window.addEventListener("pointerdown", skip, { once: true });
+
+    for (let i = 0; i < lines.length && !skipped; i += 1) {
+      els.bootLines.innerHTML = `${lines.slice(0, i + 1).join("\n")}\n<span class="cursor"></span>`;
+      await sleep(i === 1 ? 260 : 120);
+    }
+    if (!skipped) await sleep(260);
+    window.removeEventListener("keydown", skip);
+    window.removeEventListener("pointerdown", skip);
+    els.boot.classList.add("is-out");
+    window.setTimeout(() => {
+      els.boot.hidden = true;
+    }, 400);
+  }
+
+  // ── events ─────────────────────────────────────────────────────
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise((resolve, reject) => {
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand("copy");
+      area.remove();
+      if (ok) resolve();
+      else reject(new Error("copy failed"));
+    });
   }
 
   document.addEventListener("click", (e) => {
     const target = e.target;
     if (!(target instanceof Element)) return;
+    if (!els.whichkey.hidden && !prefix.armed) hideWhichKey();
 
     const spaceBtn = target.closest("[data-select-id]");
     if (spaceBtn) {
@@ -1277,70 +1873,272 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
       return;
     }
 
+    const zoomBtn = target.closest("[data-zoom]");
+    if (zoomBtn) {
+      toggleZoom(zoomBtn.getAttribute("data-zoom"));
+      return;
+    }
+
     const tabBtn = target.closest("[data-tab]");
     if (tabBtn) {
-      state.tab = tabBtn.getAttribute("data-tab") || "overview";
-      render();
+      focusPane(tabBtn.getAttribute("data-tab") || "readme");
+      setSidebarOpen(false);
+      return;
+    }
+
+    const cmdBtn = target.closest("[data-cmd]");
+    if (cmdBtn) {
+      handleCommand(cmdBtn.getAttribute("data-cmd") || "");
       return;
     }
 
     const copyBtn = target.closest("[data-copy]");
     if (copyBtn) {
-      const text = copyBtn.getAttribute("data-copy") || "";
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
+      copyText(copyBtn.getAttribute("data-copy") || "").then(
+        () => {
           copyBtn.textContent = "✓ copied";
+          copyBtn.classList.add("is-done");
           window.setTimeout(() => {
-            copyBtn.textContent = "⧉ copy command";
+            copyBtn.textContent = "⧉ copy";
+            copyBtn.classList.remove("is-done");
           }, 1600);
-        });
+        },
+        () => setPromptFeedback(L("복사하지 못했습니다", "could not copy"))
+      );
+      return;
+    }
+
+    const sceneBtn = target.closest("[data-scene]");
+    if (sceneBtn) {
+      const item = getSelectedItem();
+      state.scene[item.id] = sceneBtn.getAttribute("data-scene");
+      renderDemo(item);
+      return;
+    }
+
+    const castBtn = target.closest("[data-cast]");
+    if (castBtn && cast.screen) {
+      if (castBtn.getAttribute("data-cast") === "restart" || cast.finished) {
+        cast.userPaused = false;
+        cast.paused = false;
+        if (reduceMotion.matches) drawCastStatic();
+        else playCast();
+      } else {
+        cast.paused = !cast.paused;
+        cast.userPaused = cast.paused;
+        updateCastButton();
       }
       return;
     }
+
+    const mediaBtn = target.closest("[data-media]");
+    if (mediaBtn) {
+      showLightbox(Number(mediaBtn.getAttribute("data-media")));
+      return;
+    }
+
+    if (target === els.lbStage) closeLightbox();
   });
+
+  // Focus follows the pointer press, like a multiplexer with mouse support.
+  els.tiles.addEventListener("pointerdown", (e) => {
+    const pane = e.target instanceof Element ? e.target.closest(".pane") : null;
+    if (pane && pane.dataset.pane !== state.pane && !state.zoom && state.layout !== "single") {
+      state.pane = pane.dataset.pane;
+      applyPaneVisibility();
+    }
+  });
+
+  els.tiles.addEventListener("dblclick", (e) => {
+    const label = e.target instanceof Element ? e.target.closest(".pane-label") : null;
+    if (label) toggleZoom(label.closest(".pane").dataset.pane);
+  });
+
+  els.tiles.addEventListener(
+    "scroll",
+    () => window.requestAnimationFrame(updateScrollPositions),
+    { capture: true, passive: true }
+  );
+
+  // Feature cards: a light follows the pointer.
+  els.term.addEventListener("pointermove", (e) => {
+    const card = e.target instanceof Element ? e.target.closest(".feature") : null;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    card.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  });
+
+  // Swipe between panes when only one fits.
+  const swipe = { x: 0, y: 0, ok: false };
+  els.tiles.addEventListener(
+    "touchstart",
+    (e) => {
+      const touch = e.touches[0];
+      const scroller = e.target instanceof Element ? e.target.closest(".pre, .cast, video, .gallery") : null;
+      swipe.ok = e.touches.length === 1 && !(scroller && scroller.scrollWidth > scroller.clientWidth + 2);
+      swipe.x = touch.clientX;
+      swipe.y = touch.clientY;
+    },
+    { passive: true }
+  );
+  els.tiles.addEventListener(
+    "touchend",
+    (e) => {
+      if (!swipe.ok || state.layout !== "single") return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - swipe.x;
+      const dy = touch.clientY - swipe.y;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) cyclePane(dx < 0 ? 1 : -1);
+    },
+    { passive: true }
+  );
+
+  // Split handles move in whole cells.
+  function dragSplit(handle, axis) {
+    handle.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      handle.classList.add("is-dragging");
+      const rect = els.tiles.getBoundingClientRect();
+      const cell = axis === "x" ? state.cw : parseFloat(getComputedStyle(root).getPropertyValue("--lh"));
+      let shown = "";
+      const move = (ev) => {
+        const raw = axis === "x" ? ev.clientX - rect.left : ev.clientY - rect.top;
+        const size = axis === "x" ? rect.width : rect.height;
+        const snapped = Math.round(raw / cell) * cell;
+        const pct = Math.max(30, Math.min(70, (snapped / size) * 100));
+        root.style.setProperty(axis === "x" ? "--split-x" : "--split-y", `${pct}%`);
+        const label = `${Math.round((pct / 100) * size / cell)} ${axis === "x" ? "cols" : "rows"}`;
+        if (label !== shown) {
+          shown = label;
+          els.resizeOverlay.textContent = label;
+          els.resizeOverlay.classList.add("is-on");
+        }
+        renderStatusline(getSelectedItem(), 1);
+      };
+      const up = () => {
+        handle.classList.remove("is-dragging");
+        handle.removeEventListener("pointermove", move);
+        els.resizeOverlay.classList.remove("is-on");
+        updateScrollPositions();
+      };
+      handle.addEventListener("pointermove", move);
+      handle.addEventListener("pointerup", up, { once: true });
+      handle.addEventListener("pointercancel", up, { once: true });
+    });
+    handle.addEventListener("dblclick", () => root.style.removeProperty(axis === "x" ? "--split-x" : "--split-y"));
+  }
+  dragSplit(els.splitX, "x");
+  dragSplit(els.splitY, "y");
 
   els.brandHomeBtn.addEventListener("click", () => selectItem("profile"));
   els.mobileMenuBtn.addEventListener("click", () => setSidebarOpen(!state.sidebarOpen));
   els.sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
-
-  els.activeToggleBtn.addEventListener("click", () => {
-    state.active = !state.active;
-    render();
-  });
-
-  els.langToggleBtn.addEventListener("click", () => {
-    state.lang = state.lang === "ko" ? "en" : "ko";
-    render();
-  });
+  els.themeBtn.addEventListener("click", cycleTheme);
+  els.crtBtn.addEventListener("click", () => setCrt(!state.crt));
+  els.activeToggleBtn.addEventListener("click", () => setActive(!state.active));
+  els.langToggleBtn.addEventListener("click", () => setLang(state.lang === "ko" ? "en" : "ko"));
+  $("lb-close").addEventListener("click", closeLightbox);
+  $("lb-prev").addEventListener("click", () => moveLightbox(-1));
+  $("lb-next").addEventListener("click", () => moveLightbox(1));
 
   els.spaceFilter.addEventListener("input", (e) => {
     state.filter = e.target.value || "";
     renderSidebar();
   });
 
-  els.terminalPromptForm.addEventListener("submit", (e) => {
+  els.spaceFilter.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const first = els.projectSpaceList.querySelector("[data-select-id]");
+    if (first) {
+      selectItem(first.getAttribute("data-select-id"));
+      els.spaceFilter.blur();
+    }
+  });
+
+  els.promptForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const val = els.terminalCmdInput.value;
-    els.terminalCmdInput.value = "";
+    const val = els.cmdInput.value;
+    els.cmdInput.value = "";
     handleCommand(val);
+  });
+
+  els.cmdInput.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      completeInput();
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      if (!state.history.length) return;
+      e.preventDefault();
+      state.historyIndex = Math.max(0, Math.min(state.history.length, state.historyIndex + (e.key === "ArrowUp" ? -1 : 1)));
+      els.cmdInput.value = state.history[state.historyIndex] || "";
+    }
   });
 
   document.addEventListener("keydown", (e) => {
     const activeEl = document.activeElement;
-    const isInput =
-      activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement;
+    const isInput = activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement;
+
+    if (!els.lightbox.hidden) {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") moveLightbox(-1);
+      else if (e.key === "ArrowRight") moveLightbox(1);
+      else return;
+      e.preventDefault();
+      return;
+    }
 
     if (e.key === "Escape") {
       if (isInput) activeEl.blur();
+      hideWhichKey();
       setSidebarOpen(false);
+      if (state.zoom) setZoom(null);
       return;
     }
 
     if (isInput) return;
 
+    if (prefix.armed) {
+      if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
+      e.preventDefault();
+      hideWhichKey();
+      if (/^[1-3]$/.test(e.key)) focusPane(PANES[Number(e.key) - 1]);
+      else runSharedKey(e.key);
+      return;
+    }
+
+    if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "a") {
+      e.preventDefault();
+      armPrefix();
+      return;
+    }
+
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      if (/^[1-3]$/.test(e.key)) {
+        e.preventDefault();
+        focusPane(PANES[Number(e.key) - 1]);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        cyclePane(1);
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        cyclePane(-1);
+      }
+      return;
+    }
+
+    if (e.ctrlKey || e.metaKey) return;
+    if (!els.whichkey.hidden) hideWhichKey();
+
+    if (e.key === "?") {
+      showWhichKey(false);
+      return;
+    }
+
     if (e.key === "/") {
       e.preventDefault();
-      if (window.innerWidth <= 820) setSidebarOpen(true);
+      if (els.app.dataset.sidebar === "drawer") setSidebarOpen(true);
       els.spaceFilter.focus();
       return;
     }
@@ -1356,27 +2154,73 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
       return;
     }
 
-    if (e.key === "j" || e.key === "ArrowDown") {
+    // j/k and plain arrows walk the spaces; shift+arrows too, as in the herdr config.
+    const scrollingPane = activeEl instanceof Element && activeEl.closest(".pane-body, .cast");
+    const arrow = e.key === "ArrowDown" || e.key === "ArrowUp";
+    if (e.key === "j" || e.key === "k" || (arrow && (e.shiftKey || !scrollingPane))) {
       e.preventDefault();
       const idx = ALL_ITEMS.findIndex((it) => it.id === state.selectedId);
-      const next = ALL_ITEMS[(idx + 1) % ALL_ITEMS.length];
-      if (next) selectItem(next.id);
+      const delta = e.key === "j" || e.key === "ArrowDown" ? 1 : -1;
+      selectItem(ALL_ITEMS[(idx + delta + ALL_ITEMS.length) % ALL_ITEMS.length].id);
       return;
     }
 
-    if (e.key === "k" || e.key === "ArrowUp") {
-      e.preventDefault();
-      const idx = ALL_ITEMS.findIndex((it) => it.id === state.selectedId);
-      const prev = ALL_ITEMS[(idx - 1 + ALL_ITEMS.length) % ALL_ITEMS.length];
-      if (prev) selectItem(prev.id);
-    }
+    if (runSharedKey(e.key)) e.preventDefault();
   });
 
   window.addEventListener("hashchange", () => {
-    syncFromHash();
-    render();
+    const hash = window.location.hash.replace(/^#/, "").trim();
+    if (hash) selectItem(hash, false);
   });
 
-  syncFromHash();
-  render();
+  let resizeFrame = 0;
+  const onResize = () => {
+    window.cancelAnimationFrame(resizeFrame);
+    resizeFrame = window.requestAnimationFrame(() => {
+      measureGrid(true);
+      updateScrollPositions();
+    });
+  };
+  window.addEventListener("resize", onResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", onResize);
+    window.visualViewport.addEventListener("scroll", onResize);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      measureGrid(false);
+      positionSidebarCursor(false);
+    });
+  }
+
+  reduceMotion.addEventListener("change", () => {
+    syncCastPlayback();
+    syncArchFlow();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) syncCastPlayback();
+  });
+
+  // ── start ──────────────────────────────────────────────────────
+  const initialHash = window.location.hash.replace(/^#/, "").trim();
+  if (initialHash && ALL_ITEMS.some((it) => it.id === initialHash)) state.selectedId = initialHash;
+  PROJECTS.forEach((p, i) => {
+    state.agents[p.id] = i % 3 === 0 ? "working" : "idle";
+  });
+  state.agents[state.selectedId] = "working";
+
+  renderTopControls();
+  measureGrid(false);
+  renderSidebar();
+  applyPaneVisibility();
+  renderSpace(true);
+  boot();
+
+  window.setInterval(tickSpinner, 90);
+  window.setInterval(tickAgents, 13000);
+  window.setInterval(tickStatusline, 15000);
+  window.setInterval(() => {
+    if (state.active) state.minutes += 1;
+  }, 60000);
 })();
