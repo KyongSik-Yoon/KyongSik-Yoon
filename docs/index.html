@@ -1,29 +1,195 @@
-<html>
-<meta charset="UTF-8">
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KyongSik Yoon — Herdr Workspace Showcase</title>
+    <meta
+      name="description"
+      content="KyongSik Yoon (sam)의 AI 개발도구·하네스·시스템 프로젝트 쇼케이스. Herdr 멀티플렉서 외곽과 Claude / Antigravity 실환경 statusline 기반 터미널 소개 페이지."
+    />
+    <meta property="og:title" content="KyongSik Yoon — Herdr Workspace Showcase" />
+    <meta
+      property="og:description"
+      content="cc-desktop-mod, soksak, agy-cli-patch, agy-decision-lab, gemini-remote-linux, ts-gate"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ksyoon.com/" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0f14'/%3E%3Crect x='2' y='2' width='28' height='28' rx='4' fill='none' stroke='%237aa2f7' stroke-width='1.8'/%3E%3Cpath d='M9 12l5 4-5 4M16 20h7' stroke='%237aa2f7' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app" class="herdr-shell">
+      <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
 
-<body>
-    액티브 서비스
-    <br><br>
+      <!-- 상단 Herdr 타이틀·탭 크롬 바 -->
+      <header class="herdr-topbar" role="banner">
+        <div class="topbar-left">
+          <button
+            type="button"
+            class="icon-btn mobile-menu-btn"
+            id="mobile-menu-btn"
+            aria-label="사이드바 열기"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+              <path
+                d="M3 5h14M3 10h14M3 15h14"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
 
-    <b>packed bubble</b>
-    <br><br>
+          <button type="button" class="brand-wordmark" id="brand-home-btn" title="프로필 홈으로 이동">
+            <span class="brand-dot" aria-hidden="true"></span>
+            <span class="brand-name">herdr</span>
+          </button>
 
-    <li><a href="scatter-and-bubble/split-packed-bubble/index.html">애플리케이션 그루핑 된 구간별 묶음</a></li>
-    <li><a href="scatter-and-bubble/packed-bubble/index.html">애플리케이션 그루핑</a></li>
-    <li><a href="scatter-and-bubble/packed-bubble-without-grouping/index.html">개별 액티브 서비스</a></li>
+          <span class="host-chip" title="로컬 개발 머신 및 프리픽스 바인딩">
+            <span class="host-dot" aria-hidden="true"></span>
+            <span>sam@omarchy</span>
+            <span class="chip-sep">·</span>
+            <span class="chip-dim">prefix C-a</span>
+          </span>
+        </div>
 
-    <br>
-    <b>scatter</b>
-    <br><br>
+        <nav class="topbar-tabs" id="topbar-tabs" aria-label="패인 섹션 탭"></nav>
 
-    <li><a href="scatter-and-bubble/scatter/index.html">애플리케이션 그루핑 (x: 시작시간, y: 응답시간)</a></li>
-    <li><a href="scatter-and-bubble/scatter2/index.html">애플리케이션 그루핑 (x: 호출 건수, y: 응답시간)</a></li>
+        <div class="topbar-right">
+          <button
+            type="button"
+            class="pill-btn state-toggle-btn"
+            id="active-toggle-btn"
+            title="에이전트 동작(working) / 대기(idle) 모션 전환"
+            aria-pressed="true"
+          >
+            <span class="state-led" id="state-led" aria-hidden="true"></span>
+            <span id="state-toggle-label">working</span>
+          </button>
 
-    <br>
-    <b>bubble</b>
-    <br><br>
+          <button
+            type="button"
+            class="pill-btn lang-toggle-btn"
+            id="lang-toggle-btn"
+            title="표시 언어 전환 (한국어 / English)"
+          >
+            KO
+          </button>
 
-    <li><a href="scatter-and-bubble/bubble/index.html">애플리케이션 그루핑 (x: 응답시간, y: 호출건수)</a></li>
-</body>
+          <a
+            class="pill-btn github-link-btn"
+            href="https://github.com/KyongSik-Yoon"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>@KyongSik-Yoon</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </header>
 
+      <!-- 본문 워크스페이스: 좌측 Spaces/Agents 사이드바 + 우측 터미널 패인 -->
+      <div class="herdr-workspace">
+        <aside class="herdr-sidebar" id="herdr-sidebar" aria-label="프로젝트 및 에이전트 공간 목록">
+          <div class="sidebar-search-wrap">
+            <label class="sr-only" for="space-filter">프로젝트 검색</label>
+            <input
+              id="space-filter"
+              class="space-filter-input"
+              type="search"
+              placeholder="filter spaces…  ( / )"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-header">
+              <span>SPACES</span>
+              <span class="section-meta">HOME</span>
+            </div>
+            <div id="profile-space-list" class="space-list"></div>
+          </div>
+
+          <div class="sidebar-section sidebar-section-grow">
+            <div class="sidebar-section-header">
+              <span>PROJECTS</span>
+              <span class="section-meta" id="projects-count">6 ACTIVE</span>
+            </div>
+            <div id="project-space-list" class="space-list" role="listbox" aria-label="프로젝트 목록"></div>
+          </div>
+
+          <div class="sidebar-footer">
+            <div class="shortcut-hints">
+              <span><kbd>1</kbd>–<kbd>6</kbd> select</span>
+              <span><kbd>j</kbd>/<kbd>k</kbd> move</span>
+              <span><kbd>/</kbd> filter</span>
+            </div>
+            <div class="legacy-link-row">
+              <a href="./scatter-and-bubble/scatter/index.html" class="legacy-archive-link">
+                <span>legacy/scatter-and-bubble</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </div>
+        </aside>
+
+        <main class="herdr-main" id="herdr-main">
+          <!-- Herdr border_labels & pane_borders 프레임 -->
+          <section class="pane-frame" aria-live="polite">
+            <div class="pane-border-header">
+              <div class="pane-border-title">
+                <span class="pane-corner" aria-hidden="true">╭─</span>
+                <span class="pane-live-dot" id="pane-live-dot" aria-hidden="true"></span>
+                <span class="pane-agent-label" id="pane-agent-label">claude</span>
+                <span class="pane-divider" aria-hidden="true">─</span>
+                <span class="pane-cwd" id="pane-cwd">~/dev/git-repo/cc-desktop-mod</span>
+                <span class="pane-branch-chip" id="pane-branch-chip">⎇ main</span>
+              </div>
+              <div class="pane-border-actions" id="pane-border-actions"></div>
+            </div>
+
+            <!-- 터미널 본문 -->
+            <div class="terminal-scroll" id="terminal-scroll">
+              <div class="terminal-content" id="terminal-content"></div>
+            </div>
+
+            <!-- 인터랙티브 미니 프롬프트 입력 줄 -->
+            <form class="terminal-prompt-bar" id="terminal-prompt-form" autocomplete="off">
+              <span class="prompt-chevron" aria-hidden="true">❯</span>
+              <label class="sr-only" for="terminal-cmd-input">터미널 명령 입력</label>
+              <input
+                id="terminal-cmd-input"
+                class="terminal-cmd-input"
+                type="text"
+                placeholder="help · ls · open soksak · toggle · github"
+                spellcheck="false"
+              />
+              <span class="prompt-hint" id="prompt-feedback"></span>
+            </form>
+
+            <!-- 하단 Statusline (MIRROR_SPACE #0a0a0a + 네이티브 3D SVG 로고) -->
+            <footer class="statusline-dock" id="statusline-dock" aria-label="터미널 상태줄">
+              <div class="statusline-logo-slot" id="statusline-logo-slot"></div>
+              <div class="statusline-rows" id="statusline-rows"></div>
+            </footer>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
 </html>
