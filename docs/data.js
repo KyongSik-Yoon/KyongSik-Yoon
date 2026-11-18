@@ -25,6 +25,7 @@
     agent: "herdr",
     repoUrl: "https://github.com/KyongSik-Yoon/KyongSik-Yoon",
     siteUrl: "https://ksyoon.com/",
+    featured: "agent-world",
     sub: { ko: "프로필 · AI 사용량 카드", en: "Profile · AI usage telemetry" },
     summary: {
       ko: "Claude Code, Antigravity CLI(agy), Gemini, Tailscale 및 온디바이스 음성 AI를 일상 워크플로우에 맞게 직접 튜닝하고 확장하는 개발자 KyongSik Yoon(sam)의 작업실입니다.",
@@ -35,8 +36,8 @@
       {
         title: { ko: "AI 하네스 & 터미널 UX 엔지니어링", en: "AI Harness & Terminal UX" },
         desc: {
-          ko: "herdr v0.9.5 멀티플렉서 환경 위에서 Claude Code(cc-desktop-mod v0.81.2)와 Antigravity CLI(agy-cli-patch v0.2.4)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조합니다.",
-          en: "Customizes Claude Code (cc-desktop-mod v0.81.2) and Antigravity CLI (agy-cli-patch v0.2.4) rendering, statuslines, and side panes inside herdr v0.9.5.",
+          ko: "herdr v0.9.5 멀티플렉서 환경 위에서 Claude Code(cc-desktop-mod v0.81.2)와 Antigravity CLI(agy-cli-patch v0.2.4)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조하고, 떠 있는 에이전트들은 3D 마을(agent-world v0.1.0)에서 한눈에 봅니다.",
+          en: "Customizes Claude Code (cc-desktop-mod v0.81.2) and Antigravity CLI (agy-cli-patch v0.2.4) rendering, statuslines, and side panes inside herdr v0.9.5, and watches the running agents as a 3D village (agent-world v0.1.0).",
         },
       },
       {
@@ -56,7 +57,8 @@
     ],
     installCmd: "git clone https://github.com/KyongSik-Yoon/KyongSik-Yoon.git",
     cliBlockTitle: "workspace-index.sh",
-    cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "cc-desktop|soksak|agy-|gemini-remote|ts-gate"
+    cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "agent-world|cc-desktop|soksak|agy-|gemini-remote|ts-gate"
+agent-world         # v0.1.0 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)
 cc-desktop-mod      # v0.81.2 · Claude Code 데스크톱 스타일 플러그인 스위트
 soksak              # Android 온디바이스 한국어/개발용어 받아쓰기 + Rust PC 데몬
 agy-cli-patch       # v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처
@@ -66,7 +68,7 @@ ts-gate             # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이�
     archNodes: [
       "Android (soksak)",
       "Tailscale Mesh (ts-gate)",
-      "Herdr v0.9.5 + Collie",
+      "Herdr v0.9.5 + Collie · Agent World",
       "Claude / Antigravity CLI",
       "Decision Gate & Plugins",
     ],
@@ -78,14 +80,92 @@ ts-gate             # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이�
         ctxPct: 38,
         dir: "~/KyongSik-Yoon",
         branch: "main",
-        extra: "6 spaces active",
+        extra: "7 spaces active",
       },
       row2: { label: "claude", p5: 18, t5: "3h12m", p7: 45, t7: "2d0h", extra: "cc-desktop-mod v0.81.2" },
       row3: { label: "gemini", p5: 24, t5: "2h45m", p7: 60, t7: "3d4h", extra: "agy-cli-patch v0.2.4 · decision-lab" },
     },
   };
 
+  // The first project is the space the page opens on (app.js selects PROJECTS[0]).
   const PROJECTS = [
+    {
+      id: "agent-world",
+      slug: "agent-world",
+      kind: "custom-world",
+      name: "agent-world",
+      isNew: true,
+      cover: true,
+      badge: "village",
+      badgeClass: "badge-custom",
+      cwd: "~/dev/git-repo/agent-world",
+      branch: "main",
+      agent: "agent-world",
+      repoUrl: "https://github.com/KyongSik-Yoon/agent-world",
+      siteUrl: "https://agent-world.ksyoon.com/",
+      sub: {
+        ko: "v0.1.0 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)",
+        en: "v0.1.0 · A 3D village for your coding agents (herdr plugin)",
+      },
+      summary: {
+        ko: "herdr 에 띄워 둔 코딩 에이전트를 3D 마을로 보여 주는 로컬 대시보드입니다. 에이전트 하나가 캐릭터 하나이고, 캐릭터가 서 있는 곳을 보면 상태를 알 수 있습니다. herdr 창으로 돌아가지 않고 브라우저에서 바로 지시를 보내고, 질문에 답하고, 새 워크스페이스(집)를 만듭니다.",
+        en: "A local dashboard that shows the coding agents running in herdr as a 3D village. One agent is one character, and where it stands tells you its state. Prompt agents, answer their questions and build new workspaces (houses) from the browser, without going back to the herdr window.",
+      },
+      stack: ["TypeScript", "v0.1.0", "Bun", "three.js", "herdr >=0.9.5", "MIT"],
+      features: [
+        {
+          title: { ko: "서 있는 곳이 상태", en: "Where they stand is their state" },
+          desc: {
+            ko: "작업 중이면 집터 마당, 끝나면 가운데 광장(초록 빛기둥), 확인이 필요하면 대문 앞(빨간 빛기둥), 대기 중이면 집 옆에서 좁니다. 탭을 넘겨 볼 필요 없이 N 을 누르면 확인할 캐릭터로 차례로 이동합니다.",
+            en: "Working agents stay in their yard, finished ones walk to the plaza (green beam), agents that need you jump at the gate (red beam), and idle ones doze by the house. Press N to jump to the next one that needs a look.",
+          },
+        },
+        {
+          title: { ko: "지시·답변·터미널을 그 자리에서", en: "Prompt, answer and open the terminal in place" },
+          desc: {
+            ko: "캐릭터를 누르면 모델·effort·컨텍스트·마지막 지시와 응답이 한 창에 나옵니다. 입력창으로 지시와 이미지를 보내고, 권한 대화상자에는 적힌 키 그대로 답하고, ` 로 그 pane 의 화면을 크게 엽니다.",
+            en: "Click a character to see its model, effort, context and last prompt and reply in one panel. Send prompts and images, answer permission dialogs with the keys they show, and press ` to open that pane's terminal.",
+          },
+        },
+        {
+          title: { ko: "집 짓기 · 휴대폰 · 알림", en: "Build houses, carry on from your phone" },
+          desc: {
+            ko: "＋ 집 짓기에서 폴더·워크트리·에이전트·모델·effort·첫 지시를 한 번에 정합니다. tailnet 안에서 휴대폰으로 이어 쓰고, 종 단추를 켜 두면 에이전트가 끝났거나 확인을 기다릴 때 Web Push 로 알려 줍니다.",
+            en: "Build a house to pick the folder, worktree, agent, model, effort and first prompt in one go. Carry on from your phone inside the tailnet, and turn on the bell to get Web Push when an agent finishes or needs you.",
+          },
+        },
+      ],
+      installCmd: "herdr plugin install KyongSik-Yoon/agent-world",
+      cliBlockTitle: "herdr plugin :: agent-world v0.1.0",
+      cliSnippet: `$ herdr plugin install KyongSik-Yoon/agent-world
+
+$ bun start   # 플러그인 없이 직접 실행
+Agent World → http://127.0.0.1:4780/#k=<열쇠>
+
+$ AGENT_WORLD_TRUST_HOSTS=<host>.<tailnet>.ts.net:4780 bun start
+Agent World → http://127.0.0.1:4780/#k=<열쇠>
+  tailnet 에서도 받음(이 PC 의 계정만) → https://<host>.<tailnet>.ts.net:4780/#k=<열쇠>
+$ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
+      archNodes: [
+        "herdr socket (session.snapshot)",
+        "Harness logs: Claude Code · Codex · Antigravity",
+        "Bun server → SSE snapshot",
+        "three.js village + HUD",
+        "agent.prompt · pane.send_input",
+      ],
+      statusline: {
+        type: "custom-world",
+        row1: {
+          model: "agent-world[v0.1.0]",
+          mode: "herdr plugin",
+          workPct: 44,
+          workLabel: "4/9 agents",
+          host: "127.0.0.1:4780",
+        },
+        row2: { label: "plaza", blocked: "1 needs you", done: "2 done", working: "4 working", idle: "2 idle" },
+        row3: { label: "reads", source: "herdr socket + harness logs", hooks: "no hooks", net: "tailnet only" },
+      },
+    },
     {
       id: "cc-desktop-mod",
       slug: "cc-desktop-mod",
@@ -658,6 +738,86 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
           h: 195,
           caption: { ko: "일별 잔디", en: "Daily grass" },
         },
+      ],
+    },
+    "agent-world": {
+      scenes: [{ id: "install", kind: "cast", title: "herdr plugin install", note: NOTE.replay }],
+      media: [
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/overview.webp",
+          w: 1920,
+          h: 1147,
+          caption: {
+            ko: "섬 위의 집 네 채와 에이전트 아홉. 일을 끝낸 캐릭터는 광장의 초록 빛기둥 아래 서 있고, 목록은 확인 필요·완료·작업 중·대기로 묶입니다 (가상 프로젝트를 흉내 낸 시험용 세션)",
+            en: "Four houses and nine agents on the island. Finished characters stand under green beams in the plaza; the list groups them by needs you, done, working and idle (a mock session)",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/detail.webp",
+          w: 1920,
+          h: 1147,
+          caption: {
+            ko: "캐릭터를 누르면 뜨는 상태 창: 모델, effort, 컨텍스트, 브랜치, 마지막 지시·응답과 입력창",
+            en: "The panel behind a character: model, effort, context, branch, the last prompt and reply, and the input box",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/blocked.webp",
+          w: 1920,
+          h: 1147,
+          caption: {
+            ko: "확인 필요: 캐릭터가 대문 앞에 나와 있고, 에이전트가 띄운 권한 대화상자가 상태 창에 그대로 보입니다",
+            en: "Needs you: the character waits at the gate and the agent's permission dialog shows as-is in the panel",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/terminal.webp",
+          w: 1920,
+          h: 1147,
+          caption: {
+            ko: "크게 연 터미널: 에이전트의 화면이 색까지 그대로 보이고 키 입력은 pane 으로 바로 갑니다",
+            en: "The terminal, opened large: the agent's screen in full colour, with keys going straight to the pane",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/night.webp",
+          w: 1920,
+          h: 1147,
+          caption: { ko: "밤 테마의 월드", en: "The world in the night theme" },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/build.webp",
+          w: 760,
+          h: 1092,
+          caption: {
+            ko: "집 짓기: 폴더, 이름, 워크트리, 들일 에이전트와 모델·effort, 첫 지시",
+            en: "Building a house: folder, name, worktree, the agent with its model and effort, and the first prompt",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/phone.webp",
+          w: 780,
+          h: 1688,
+          caption: { ko: "휴대폰 폭의 월드 화면", en: "The world at phone width" },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/agent-world/phone-detail.webp",
+          w: 780,
+          h: 1688,
+          caption: {
+            ko: "휴대폰에서 연 확인 필요 상태 창: 대화상자 아래에 빠른 키 버튼",
+            en: "A needs-you panel on the phone: quick key buttons under the dialog",
+          },
+        },
+        sitePreview("agent-world", "https://agent-world.ksyoon.com/"),
       ],
     },
     "cc-desktop-mod": {

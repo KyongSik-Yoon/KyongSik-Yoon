@@ -628,6 +628,15 @@ kbd {
 .badge-agy { color: var(--cyan); }
 .badge-custom { color: var(--teal); }
 
+.space-new {
+  flex-shrink: 0;
+  padding: 0 calc(var(--cw) / 2);
+  color: var(--accent-ink);
+  background: var(--yellow);
+  font-size: 0.86em;
+  font-weight: 700;
+}
+
 .space-row2 {
   padding-left: calc(var(--cw) * 2);
   color: var(--fg-dim);
@@ -1093,6 +1102,71 @@ kbd {
 .badge.is-hl {
   color: var(--teal);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teal) 45%, transparent);
+}
+
+.badge.is-new {
+  color: var(--accent-ink);
+  background: var(--yellow);
+  box-shadow: none;
+  font-weight: 700;
+}
+
+/* 프로필 맨 위에 올리는 프로젝트 하나: 첫 스크린샷 + 소개 + 들어가는 길 */
+.featured {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--cw) * 40)), 1fr));
+  gap: var(--lh) calc(var(--cw) * 3);
+  align-items: start;
+  padding: var(--lh) calc(var(--cw) * 2);
+  background: var(--bg-raise);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--yellow) 45%, transparent);
+}
+
+.cover-shot {
+  display: block;
+  min-width: 0;
+  box-shadow: 0 0 0 1px var(--line-strong), 0 0 28px -10px var(--glow);
+  transition: box-shadow 0.2s ease, transform 0.3s var(--ease);
+}
+
+.cover-shot:hover {
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 30px -14px var(--glow);
+  transform: translateY(-2px);
+}
+
+.cover-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: var(--shot-filter);
+}
+
+.cover-shot.is-hero {
+  max-width: calc(var(--cw) * 92);
+}
+
+.featured-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--lh) / 2);
+  min-width: 0;
+}
+
+.featured-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 calc(var(--cw) * 2);
+  margin: 0;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--fg-bright);
+}
+
+.featured-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(var(--cw) * 3);
 }
 
 .sec {

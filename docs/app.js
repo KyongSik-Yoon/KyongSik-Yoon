@@ -36,7 +36,7 @@
   /** @typedef {"ko" | "en"} Lang */
 
   const state = {
-    selectedId: "cc-desktop-mod",
+    selectedId: PROJECTS[0].id,
     pane: "readme",
     zoom: null,
     side: "demo",
@@ -464,6 +464,18 @@
         </g>
       </svg>`;
     }
+    if (kind === "custom-world") {
+      return `<svg viewBox="0 0 40 40"${activeAttr} role="img" aria-label="Agent World island icon">
+        <g class="custom-logo-pulse">
+          <path d="M5 26l7 7h16l7-7" style="${bg};stroke:var(--orange)" stroke-width="1.6" stroke-linejoin="round" />
+          <ellipse cx="20" cy="26" rx="15" ry="5.5" style="${bg};stroke:var(--green)" stroke-width="1.8" />
+          <path d="M11 25v-7l5.5-4.5 5.5 4.5v7Z" style="${bg};stroke:var(--magenta)" stroke-width="1.8" stroke-linejoin="round" />
+          <path d="M15.5 25v-3.5h2V25" style="stroke:var(--magenta)" stroke-width="1.4" fill="none" />
+          <path d="M28 25v-3M28 22l-3 0 3-7 3 7Z" style="fill:var(--green);stroke:var(--green)" stroke-width="1.2" stroke-linejoin="round" />
+          <circle cx="23" cy="28" r="1.7" style="fill:var(--clawd)" />
+        </g>
+      </svg>`;
+    }
     return `<svg viewBox="0 0 40 40"${activeAttr} role="img" aria-label="Herdr mux icon">
       <g class="custom-logo-pulse">
         <rect x="4" y="6" width="32" height="28" rx="6" style="${bg};stroke:var(--blue)" stroke-width="1.8" />
@@ -622,6 +634,28 @@
       ];
     }
 
+    if (sl.type === "custom-world") {
+      return [
+        [
+          grp(0, seg("c-teal", r1.model)),
+          grp(4, seg("c-green", r1.mode)),
+          grp(1, dim("│"), white("working"), bar(r1.workPct * k), white(r1.workLabel)),
+          grp(3, dim("│"), seg("c-cyan", r1.host)),
+        ],
+        [
+          grp(0, dim("├─"), seg("c-teal", r2.label), seg("c-red", r2.blocked)),
+          grp(1, dim("·"), seg("c-green", r2.done)),
+          grp(2, dim("·"), seg("c-yellow", r2.working)),
+          grp(3, dim("·"), dim(r2.idle)),
+        ],
+        [
+          grp(0, dim("└─"), seg("c-teal", r3.label), white(r3.source)),
+          grp(2, dim("·"), seg("c-green", r3.hooks)),
+          grp(3, dim("·"), dim(r3.net)),
+        ],
+      ];
+    }
+
     const ctx = r1.ctxPct * k;
     return [
       [
@@ -706,7 +740,7 @@
       <span class="space-row">
         <span class="space-state" data-state="${st}" data-agent="${esc(item.id)}"${st === "working" ? " data-spin" : ""} aria-hidden="true">${stateGlyph(st)}</span>
         <span class="space-name">${esc(item.name)}</span>
-        <span class="space-idx">${esc(indexHint)}</span>
+        <span class="space-idx">${esc(indexHint)}</span>${item.isNew ? '<span class="space-new">new</span>' : ""}
         <span class="space-badge ${item.badgeClass}">${esc(item.badge)}</span>
       </span>
       <span class="space-row space-row2">
@@ -944,6 +978,41 @@
     </div>`;
   }
 
+  /** The profile leads with one project: its first screenshot, what it is, and a way in. */
+  function featuredBlock(item) {
+    const cover = item.media.find((m) => m.kind === "image");
+    const promptChar = item.installCmd.startsWith("/") ? "❯" : "$";
+    return `<section class="sec">
+      <h2 class="sec-h">${L("새 프로젝트", "New Project")}</h2>
+      <div class="featured">
+        ${
+          cover
+            ? `<button type="button" class="cover-shot" data-select-id="${esc(item.id)}" title="${esc(L("스페이스 열기", "Open the space"))}">
+          <img src="${esc(cover.src)}" alt="${esc(t(cover.caption))}" width="${cover.w}" height="${cover.h}" decoding="async" />
+        </button>`
+            : ""
+        }
+        <div class="featured-body">
+          <h3 class="featured-name">${esc(item.name)}<span class="badge is-new">new</span></h3>
+          <div class="hero-sub">${esc(t(item.sub))}</div>
+          <p class="feature-d">${esc(t(item.summary))}</p>
+          <div class="box">
+            <div class="box-h">
+              <span>${esc(item.cliBlockTitle)}</span>
+              <button type="button" class="copy-btn" data-copy="${esc(item.installCmd)}">⧉ copy</button>
+            </div>
+            <pre class="pre wrap"><span class="c-green">${promptChar}</span> ${highlightCommand(item.installCmd)}</pre>
+          </div>
+          <div class="featured-actions">
+            <button type="button" class="link" data-select-id="${esc(item.id)}">${L("스페이스 열기", "open the space")} →</button>
+            ${item.siteUrl ? `<a class="link" href="${esc(item.siteUrl)}" target="_blank" rel="noopener noreferrer">site ↗</a>` : ""}
+            <a class="link" href="${esc(item.repoUrl)}" target="_blank" rel="noopener noreferrer">github ↗</a>
+          </div>
+        </div>
+      </div>
+    </section>`;
+  }
+
   function renderReadme(item, animate) {
     const isProfile = item.id === "profile";
     const cmdLine = isProfile ? "cat ~/KyongSik-Yoon/README.md && herdr spaces --all" : `cd ${item.cwd} && cat README.md`;
@@ -962,10 +1031,22 @@
       <div class="hero-sub">${esc(t(item.sub))}</div>
       <p class="hero-summary">${esc(t(item.summary))}</p>
       <div class="badges">
-        <span class="badge is-hl">agent:${esc(item.agent)}</span>
+        ${item.isNew ? '<span class="badge is-new">new</span>' : ""}<span class="badge is-hl">agent:${esc(item.agent)}</span>
         ${item.stack.map((s) => `<span class="badge">${esc(s)}</span>`).join("")}
       </div>
     </div>`);
+
+    // A project that is mostly a picture shows it straight away, not two panes over.
+    const coverIndex = item.cover ? item.media.findIndex((m) => m.kind === "image") : -1;
+    if (coverIndex >= 0) {
+      const cover = item.media[coverIndex];
+      blocks.push(`<button type="button" class="cover-shot is-hero" data-media="${coverIndex}" title="${esc(L("크게 보기", "View larger"))}">
+        <img src="${esc(cover.src)}" alt="${esc(t(cover.caption))}" width="${cover.w}" height="${cover.h}" decoding="async" />
+      </button>`);
+    }
+
+    const featured = isProfile && PROJECTS.find((p) => p.id === item.featured);
+    if (featured) blocks.push(featuredBlock(featured));
 
     if (isProfile) {
       blocks.push(`<section class="sec">
@@ -1701,7 +1782,7 @@
 
   // ── which-key ──────────────────────────────────────────────────
   const KEYS = [
-    ["1–6", () => L("프로젝트 열기", "open a project"), false],
+    [`1–${PROJECTS.length}`, () => L("프로젝트 열기", "open a project"), false],
     ["0 ~", () => L("프로필", "profile"), false],
     ["j k", () => L("다음·이전 스페이스", "next / previous space"), false],
     ["alt+←→", () => L("패인 이동", "move between panes"), false],
@@ -2151,7 +2232,7 @@
       return;
     }
 
-    if (/^[1-6]$/.test(e.key)) {
+    if (/^[1-9]$/.test(e.key)) {
       const proj = PROJECTS[Number(e.key) - 1];
       if (proj) selectItem(proj.id);
       return;
