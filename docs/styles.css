@@ -1650,8 +1650,9 @@ kbd {
   background: transparent;
 }
 
+/* 여백은 margin 으로 준다. padding 이면 두 줄에서 자른 다음 줄이 아래 여백 안에 비친다. */
 .shot-cap {
-  padding: calc(var(--lh) / 4) var(--cw);
+  margin: calc(var(--lh) / 4) var(--cw);
   color: var(--fg-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
