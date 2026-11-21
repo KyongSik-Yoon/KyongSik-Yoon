@@ -959,7 +959,48 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
     },
     "gemini-desktop-linux": {
       scenes: [{ id: "serve", kind: "cast", title: "install & run", note: NOTE.replay }],
-      media: [],
+      media: [
+        {
+          kind: "image",
+          src: ASSET + "/gemini-desktop-linux/chat-dark.webp",
+          w: 1860,
+          h: 1230,
+          caption: {
+            ko: "다크 테마 채팅 화면 — GFM 표, Rust 구문 강조 코드블록, Canvas 문서 카드, 원격 연결 상태 표시 (데모 세션)",
+            en: "Dark theme chat view — GFM tables, syntax-highlighted Rust code blocks, Canvas document card, and remote status (demo session)",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/gemini-desktop-linux/chat-light.webp",
+          w: 1860,
+          h: 1230,
+          caption: {
+            ko: "라이트 테마 채팅 화면 — 시스템·Omarchy 테마 자동 추종 및 수동 전환 지원",
+            en: "Light theme chat view — follows system/Omarchy themes automatically or switches manually",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/gemini-desktop-linux/schedules.webp",
+          w: 1860,
+          h: 1230,
+          caption: {
+            ko: "예약된 작업(Scheduled Actions) — 클라우드·로컬 예약 카드, 활성/일시중지 필터, 추천 작업",
+            en: "Scheduled Actions — cloud and local schedule cards, active/paused filters, and recommended automations",
+          },
+        },
+        {
+          kind: "image",
+          src: ASSET + "/gemini-desktop-linux/settings.webp",
+          w: 1860,
+          h: 1230,
+          caption: {
+            ko: "설정 모달 — 사용 한도 게이지, 테마·언어 전환, 원격 PC 제어 연결 상태(23개 도구·허용 폴더)",
+            en: "Settings modal — usage limit gauges, theme/language switcher, and remote PC control status (23 tools & allowed folders)",
+          },
+        },
+      ],
     },
     "ts-gate": {
       scenes: [
