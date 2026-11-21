@@ -50,21 +50,21 @@
       {
         title: { ko: "크로스 디바이스 연결 & 프라이버시", en: "Cross-Device Bridge & Privacy" },
         desc: {
-          ko: "Tailscale 기반 임시 포트 게이트(ts-gate v0.1.0), Linux 원격 데몬(gemini-remote-linux), 온디바이스 음성 받아쓰기(soksak + soksak-daemon)로 안전한 개인 개발 환경을 구축합니다.",
-          en: "Connects Android, Linux desktops, and tailnet services privately via ts-gate v0.1.0, gemini-remote-linux, and on-device soksak.",
+          ko: "Tailscale 기반 임시 포트 게이트(ts-gate v0.1.0), Linux 네이티브 Gemini 데스크톱 앱·원격 데몬(gemini-desktop-linux), 온디바이스 음성 받아쓰기(soksak + soksak-daemon)로 안전한 개인 개발 환경을 구축합니다.",
+          en: "Connects Android, Linux desktops, and tailnet services privately via ts-gate v0.1.0, gemini-desktop-linux, and on-device soksak.",
         },
       },
     ],
     installCmd: "git clone https://github.com/KyongSik-Yoon/KyongSik-Yoon.git",
     cliBlockTitle: "workspace-index.sh",
-    cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "agent-world|cc-desktop|soksak|agy-|gemini-remote|ts-gate"
-agent-world         # v0.1.0 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)
-cc-desktop-mod      # v0.81.2 · Claude Code 데스크톱 스타일 플러그인 스위트
-soksak              # Android 온디바이스 한국어/개발용어 받아쓰기 + Rust PC 데몬
-agy-cli-patch       # v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처
-agy-decision-lab    # Gemini Decisions API 안전 게이트·스웜 라우터·5종 MCP
-gemini-remote-linux # Go 1.27.3 · Linux PC ↔ Gemini 모바일/웹/데스크톱 원격 데몬
-ts-gate             # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이트 TUI/CLI`,
+    cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "agent-world|cc-desktop|soksak|agy-|gemini-desktop|ts-gate"
+agent-world          # v0.1.0 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)
+cc-desktop-mod       # v0.81.2 · Claude Code 데스크톱 스타일 플러그인 스위트
+soksak               # Android 온디바이스 한국어/개발용어 받아쓰기 + Rust PC 데몬
+agy-cli-patch        # v0.2.4 · Antigravity CLI(agy) 9종 무의존성 동적 바이너리 패처
+agy-decision-lab     # Gemini Decisions API 안전 게이트·스웜 라우터·5종 MCP
+gemini-desktop-linux # Rust iced 0.14 + Go 1.27 · Linux 네이티브 Gemini 데스크톱 앱 & 원격 데몬
+ts-gate              # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이트 TUI/CLI`,
     archNodes: [
       "Android (soksak)",
       "Tailscale Mesh (ts-gate)",
@@ -502,70 +502,71 @@ route -> Gemini 4 Argon (High) · reason=concurrency audit requires multi-step r
       },
     },
     {
-      id: "gemini-remote-linux",
-      slug: "gemini-remote-linux",
+      id: "gemini-desktop-linux",
+      slug: "gemini-desktop-linux",
       kind: "custom-gemini",
-      name: "gemini-remote-linux",
-      badge: "gemini-d",
+      name: "gemini-desktop-linux",
+      badge: "gemini-ui",
       badgeClass: "badge-custom",
-      cwd: "~/dev/git-repo/gemini-remote-linux",
+      cwd: "~/dev/git-repo/gemini-desktop-linux",
       branch: "main",
-      agent: "gemini-remote",
-      repoUrl: "https://github.com/KyongSik-Yoon/gemini-remote-linux",
+      agent: "gemini-ui",
+      repoUrl: "https://github.com/KyongSik-Yoon/gemini-desktop-linux",
       siteUrl: null,
       sub: {
-        ko: "Linux PC ↔ Gemini 모바일·웹·데스크톱 양방향 원격 데몬 (비공식)",
-        en: "Unofficial Gemini Desktop daemon for Linux (Shell, MCP & Wayland/X11)",
+        ko: "Linux 네이티브 Gemini 데스크톱 앱(Rust iced) & 양방향 원격 데몬(Go)",
+        en: "Unofficial Native Gemini Desktop App (Rust iced) & Remote Daemon (Go) for Linux",
       },
       summary: {
-        ko: "Linux 워크스테이션을 Gemini 모바일·웹 및 리눅스 비공식 Gemini 데스크톱 앱과 양방향 연결해 로컬 워크스페이스 파일 조작, 셸 실행, MCP 브리지, Wayland/Hyprland·X11 GUI Computer Use를 구동하는 Go 1.27.3 데몬입니다.",
-        en: "Connects Linux PCs to Gemini Mobile, Web, and unofficial Linux Gemini desktop clients in a single Go 1.27.3 binary for scoped workspace file tools, shell commands, MCP bridges, and Wayland/X11 Computer Use.",
+        ko: "Linux에서 네이티브 Rust/iced 0.14 GUI(gemini-ui)로 Gemini 데스크톱 경험을 그대로 제공하고, Go 1.27.3 데몬(gemini-remote)으로 모바일·웹과 로컬 워크스페이스 파일 조작, 셸 실행, 23종 MCP 브리지, Wayland/Hyprland·X11 GUI Computer Use를 양방향 연결합니다.",
+        en: "Brings the native Gemini Desktop experience to Linux with a Rust + iced 0.14 GUI (gemini-ui) backed by a Go 1.27.3 remote daemon (gemini-remote) for scoped workspace tools, shell/Python, 23 MCP tools, and Wayland/X11 Computer Use.",
       },
-      stack: ["Go 1.27.3", "Robin/Punctual Protocol", "Wayland / Hyprland & X11", "MIT"],
+      stack: ["Rust · iced 0.14", "Go 1.27.3", "Wayland / Hyprland & X11", "MIT"],
       features: [
         {
-          title: { ko: "모바일·웹·비공식 Linux 데스크톱 연동", en: "Mobile, Web & Unofficial Linux Client Sync" },
+          title: { ko: "네이티브 Linux 데스크톱 GUI (gemini-ui)", en: "Native Linux Desktop GUI (gemini-ui)" },
           desc: {
-            ko: "장치 등록·프레즌스·핸드셰이크 세션 갱신으로 좀비 구독 없이 Android/iOS·웹·비공식 Linux 데스크톱 래퍼와 실시간 양방향 스트림을 유지합니다.",
-            en: "Maintains device registration, presence heartbeats, and handshake-safe bidirectional streams across Gemini Mobile, Web, and Linux desktop wrappers.",
+            ko: "증분 SSE 마크다운·Canvas 프리뷰·사고 과정 스트리밍, 라이브러리·이미지·예약·노트북·검색(Ctrl+K), 시스템 라이트/다크 자동 추종, 한/영 다국어와 유휴 리드로우 0 최적화를 제공합니다.",
+            en: "Features incremental SSE Markdown, Canvas previews, Library/Images/Schedules/Notebooks/Search (Ctrl+K), auto Light/Dark theming, EN/KO localization, and zero idle redraws.",
           },
         },
         {
-          title: { ko: "로컬 툴 실행 & 외부 MCP 브리지", en: "Scoped File Tools & MCP Bridge" },
+          title: { ko: "양방향 원격 동기화 & 23종 로컬·MCP 툴", en: "Bidirectional Sync & 23 Local/MCP Tools" },
           desc: {
-            ko: "허용된 폴더 내에서 셸·파일 편집(view_file 로컬 텍스트 직독 분기 포함)·Grep을 처리하며 내장 Git·Obsidian 및 외부 stdio MCP 서버를 연결합니다.",
-            en: "Runs scoped shell, grep, and file edits (with local text branching in view_file) alongside built-in git/obsidian and external stdio MCP servers.",
+            ko: "허용 폴더 내 셸·Python·파일 편집·Grep, 내장 Git(checkout/commit 포함)·Obsidian 및 외부 stdio MCP 브리지, Google Drive 첨부, 예약·원격 완료 데스크톱 알림(notify-send)을 지원합니다.",
+            en: "Runs scoped shell, Python, file edits, built-in git/obsidian + external stdio MCP bridges, Google Drive attachments, and desktop notifications across Mobile, Web, and Linux.",
           },
         },
         {
-          title: { ko: "Wayland / X11 GUI & systemd 상주", en: "Wayland/X11 GUI & systemd Service" },
+          title: { ko: "Wayland 가상 포인터 · AT-SPI2 & 원커맨드 설치", en: "Wayland Virtual Pointer, AT-SPI2 & 1-Cmd Install" },
           desc: {
-            ko: "Wayland/Hyprland(hyprctl, grim, wtype, ydotool)와 X11(xdotool, import) GUI 제어(ui_control)를 지원하며 ./gemini-remote service install로 사용자 서비스 등록이 가능합니다.",
-            en: "Supports ui_control on both Hyprland/Wayland and X11 plus one-command user daemon installation via ./gemini-remote service install.",
+            ko: "순수 Python zwlr_virtual_pointer_manager_v1 가상 포인터와 AT-SPI2 접근성 트리, Hyprland/X11 ui_control을 지원하며 ./install.sh 한 번으로 바이너리·.desktop 런처·systemd 서비스를 설치합니다.",
+            en: "Supports pure-Python zwlr_virtual_pointer_manager_v1 virtual pointer, AT-SPI2 tree inspection, Hyprland/X11 ui_control, and one-command binary + .desktop + systemd installation via ./install.sh.",
           },
         },
       ],
-      installCmd: "./gemini-remote login && ./gemini-remote folders add ~/dev/git-repo && ./gemini-remote register && ./gemini-remote serve",
-      cliBlockTitle: "gemini-remote :: register & serve",
-      cliSnippet: `$ ./gemini-remote folders add ~/dev/git-repo
-$ ./gemini-remote register
-$ ./gemini-remote serve   # 또는 ./gemini-remote service install
-[auth]   OAuth credentials verified (device: omarchy-linux-01)
-[bridge] folders mounted: ~/dev/git-repo
-[mcp]    attached: git, obsidian (+ external stdio bridge)
-[gui]    compositor=Hyprland (capture=grim, input=wtype+ydotool)
-[stream] Robin/Punctual connected (Mobile / Web / Linux desktop wrapper)`,
+      installCmd: "./install.sh && gemini-remote login && gemini-remote register && gemini-ui",
+      cliBlockTitle: "gemini-desktop-linux :: install & run",
+      cliSnippet: `$ ./install.sh
+[1/4] Building gemini-remote daemon (Go)...
+[2/4] Building gemini-ui desktop app (Rust release)...
+[3/4] Installing binaries, icon, and .desktop entry...
+[4/4] Configuring systemd user service...
+$ gemini-remote folders add ~/dev/git-repo && gemini-remote register
+[auth]   OAuth credentials verified · Punctual stream connected
+[mcp]    23 tools ready (git, obsidian + external stdio bridge)
+[gui]    gemini-ui (Rust iced 0.14) · Wayland virtual pointer + AT-SPI2`,
       archNodes: [
-        "Gemini Mobile / Web / Desktop",
-        "Cloud Gateway (Robin/Punctual)",
+        "gemini-ui (Rust · iced 0.14)",
+        "Unix Socket IPC (0600)",
         "gemini-remote (Go 1.27.3)",
-        "Local Shell · File · MCP",
-        "Wayland / Hyprland & X11 GUI",
+        "Gemini Mobile / Web / Cloud",
+        "Local Tools · 23 MCP · Wayland CUA",
       ],
       statusline: {
         type: "custom-gemini",
         row1: {
-          model: "gemini-remote[go1.27.3]",
+          model: "gemini-ui[iced0.14+go]",
           proto: "Robin/Punctual",
           rttPct: 21,
           rttLabel: "41ms RTT",
@@ -580,8 +581,8 @@ $ ./gemini-remote serve   # 또는 ./gemini-remote service install
         },
         row3: {
           label: "wayland",
-          compositor: "Hyprland + X11 ui_control",
-          mcp: "git + obsidian + stdio MCP",
+          compositor: "Hyprland · wlr-vptr + AT-SPI2",
+          mcp: "23 tools (git + obsidian + stdio)",
         },
       },
     },
@@ -956,8 +957,8 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
         },
       ],
     },
-    "gemini-remote-linux": {
-      scenes: [{ id: "serve", kind: "cast", title: "register & serve", note: NOTE.replay }],
+    "gemini-desktop-linux": {
+      scenes: [{ id: "serve", kind: "cast", title: "install & run", note: NOTE.replay }],
       media: [],
     },
     "ts-gate": {
