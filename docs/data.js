@@ -512,7 +512,7 @@ route -> Gemini 4 Argon (High) · reason=concurrency audit requires multi-step r
       branch: "main",
       agent: "gemini-ui",
       repoUrl: "https://github.com/KyongSik-Yoon/gemini-desktop-linux",
-      siteUrl: null,
+      siteUrl: "https://gemini-desktop.ksyoon.com/",
       sub: {
         ko: "Linux 네이티브 Gemini 데스크톱 앱(Rust iced) & 양방향 원격 데몬(Go)",
         en: "Unofficial Native Gemini Desktop App (Rust iced) & Remote Daemon (Go) for Linux",
@@ -1000,6 +1000,7 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
             en: "Settings modal — usage limit gauges, theme/language switcher, and remote PC control status (23 tools & allowed folders)",
           },
         },
+        sitePreview("gemini-desktop-linux", "https://gemini-desktop.ksyoon.com/"),
       ],
     },
     "ts-gate": {
