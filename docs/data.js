@@ -279,15 +279,15 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
         {
           title: { ko: "플로팅 버블 & 자동 엔터(⏎)", en: "Floating Bubble & Auto-Enter (⏎)" },
           desc: {
-            ko: "접근성 서비스로 포커스를 빼앗지 않고 글을 삽입하며, 1~5초 후 Enter를 눌러 주는 자동 엔터 링(버블 터치 시 취소)으로 모바일 에이전트 프롬프트를 손대지 않고 보냅니다. 속삭이듯 말해도 받아쓰고(조용히 말하기), 속삭일 때도 말이 쉴 때마다 조각을 미리 변환해 멈춘 뒤 기다림이 짧습니다. 항상 띄운 버블은 쓰지 않을 때 화면 끝 탭으로 비켜 있다가 키보드가 올라오면 다시 나옵니다.",
-            en: "Injects text via AccessibilityService without stealing focus, featuring an optional 1–5s auto-enter ring countdown (tap bubble to cancel). Whispered speech is kept (quiet speech), and each pause pre-converts the piece, whispering included, so the wait after you stop is short. An always-on bubble tucks into an edge tab when idle and slides back out when the keyboard comes up.",
+            ko: "접근성 서비스로 포커스를 빼앗지 않고 글을 삽입하며, 1~5초 후 Enter를 눌러 주는 자동 엔터 링(버블 터치 시 취소, 키보드 뒤로 밀린 보내기 버튼도 찾아 누름)으로 모바일 에이전트 프롬프트를 손대지 않고 보냅니다. 속삭이듯 말해도 받아쓰고(조용히 말하기), 속삭일 때도 말이 쉴 때마다 조각을 미리 변환해 멈춘 뒤 기다림이 짧습니다. 항상 띄운 버블은 쓰지 않을 때 화면 끝 탭으로 비켜 있다가 키보드가 올라오면 다시 나옵니다.",
+            en: "Injects text via AccessibilityService without stealing focus, featuring an optional 1–5s auto-enter ring countdown (tap bubble to cancel; it finds a send button pushed behind the keyboard). Whispered speech is kept (quiet speech), and each pause pre-converts the piece, whispering included, so the wait after you stop is short. An always-on bubble tucks into an edge tab when idle and slides back out when the keyboard comes up.",
           },
         },
         {
           title: { ko: "CAM++ · VoxLock & Snapdragon NPU", en: "CAM++ VoxLock & SM8850/SM8750 NPU" },
           desc: {
-            ko: "내 목소리 등록(CAM++)과 VoxLock으로 주변 TV·타인 음성을 분리하며, Snapdragon 8 Elite Gen 5(SM8850)와 Snapdragon 8 Elite(SM8750) 실기기에서 Large v3 Turbo NPU를 정식 지원합니다.",
-            en: "Filters speaker noise with CAM++ and VoxLock, running Whisper Large v3 Turbo natively on Qualcomm NPU across both SM8850 and verified SM8750 devices.",
+            ko: "내 목소리 등록(CAM++)과 VoxLock으로 주변 TV·타인 음성을 분리하며, Snapdragon 8 Elite Gen 5(SM8850)와 Snapdragon 8 Elite(SM8750) 실기기에서 Large v3 Turbo NPU를 정식 지원합니다. NPU 디코드가 같은 말을 되풀이하다 멈추면 그 구간을 나눠 다시 풉니다.",
+            en: "Filters speaker noise with CAM++ and VoxLock, running Whisper Large v3 Turbo natively on Qualcomm NPU across both SM8850 and verified SM8750 devices, and re-decodes a window split in two when the NPU decode gets stuck repeating itself.",
           },
         },
         {
