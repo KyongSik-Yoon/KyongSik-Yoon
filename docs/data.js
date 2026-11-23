@@ -36,8 +36,8 @@
       {
         title: { ko: "AI 하네스 & 터미널 UX 엔지니어링", en: "AI Harness & Terminal UX" },
         desc: {
-          ko: "herdr v0.9.5 멀티플렉서 환경 위에서 Claude Code(cc-desktop-mod v0.81.7)와 Antigravity CLI(agy-cli-patch v0.2.10)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조하고, 떠 있는 에이전트들은 3D 마을(agent-world v0.6.47)에서 한눈에 봅니다.",
-          en: "Customizes Claude Code (cc-desktop-mod v0.81.7) and Antigravity CLI (agy-cli-patch v0.2.10) rendering, statuslines, and side panes inside herdr v0.9.5, and watches the running agents as a 3D village (agent-world v0.6.47).",
+          ko: "herdr v0.9.5 멀티플렉서 환경 위에서 Claude Code(cc-desktop-mod v0.81.8)와 Antigravity CLI(agy-cli-patch v0.2.10)의 출력 렌더링, 상태줄, 사이드 패인을 직접 개조하고, 떠 있는 에이전트들은 3D 마을(agent-world v0.7.4)에서 한눈에 봅니다.",
+          en: "Customizes Claude Code (cc-desktop-mod v0.81.8) and Antigravity CLI (agy-cli-patch v0.2.10) rendering, statuslines, and side panes inside herdr v0.9.5, and watches the running agents as a 3D village (agent-world v0.7.4).",
         },
       },
       {
@@ -58,8 +58,8 @@
     installCmd: "git clone https://github.com/KyongSik-Yoon/KyongSik-Yoon.git",
     cliBlockTitle: "workspace-index.sh",
     cliSnippet: `$ ls -1 ~/dev/git-repo | grep -E "agent-world|cc-desktop|soksak|agy-|gemini-desktop|ts-gate"
-agent-world          # v0.6.47 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)
-cc-desktop-mod       # v0.81.7 · Claude Code 데스크톱 스타일 플러그인 스위트
+agent-world          # v0.7.4 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)
+cc-desktop-mod       # v0.81.8 · Claude Code 데스크톱 스타일 플러그인 스위트
 soksak               # Android 온디바이스 한국어/개발용어 받아쓰기 + Rust PC 데몬
 agy-cli-patch        # v0.2.10 · Antigravity CLI(agy) 11종 무의존성 동적 바이너리 패처
 agy-decision-lab     # Gemini Decisions API 안전 게이트·스웜 라우터·5종 MCP
@@ -82,7 +82,7 @@ ts-gate              # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이
         branch: "main",
         extra: "7 spaces active",
       },
-      row2: { label: "claude", p5: 18, t5: "3h12m", p7: 45, t7: "2d0h", extra: "cc-desktop-mod v0.81.7" },
+      row2: { label: "claude", p5: 18, t5: "3h12m", p7: 45, t7: "2d0h", extra: "cc-desktop-mod v0.81.8" },
       row3: { label: "gemini", p5: 24, t5: "2h45m", p7: 60, t7: "3d4h", extra: "agy-cli-patch v0.2.10 · decision-lab" },
     },
   };
@@ -104,14 +104,14 @@ ts-gate              # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이
       repoUrl: "https://github.com/KyongSik-Yoon/agent-world",
       siteUrl: "https://agent-world.ksyoon.com/",
       sub: {
-        ko: "v0.6.47 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)",
-        en: "v0.6.47 · A 3D village for your coding agents (herdr plugin)",
+        ko: "v0.7.4 · 코딩 에이전트들이 사는 3D 마을 (herdr 플러그인)",
+        en: "v0.7.4 · A 3D village for your coding agents (herdr plugin)",
       },
       summary: {
         ko: "herdr 에 띄워 둔 코딩 에이전트를 3D 마을로 보여 주는 로컬 대시보드입니다. 에이전트 하나가 캐릭터 하나이고, 캐릭터가 서 있는 곳을 보면 상태를 알 수 있습니다. herdr 창으로 돌아가지 않고 브라우저에서 바로 지시를 보내고, 질문에 답하고, 새 워크스페이스(집)를 만듭니다.",
         en: "A local dashboard that shows the coding agents running in herdr as a 3D village. One agent is one character, and where it stands tells you its state. Prompt agents, answer their questions and build new workspaces (houses) from the browser, without going back to the herdr window.",
       },
-      stack: ["TypeScript", "v0.6.47", "Bun", "three.js", "herdr >=0.9.5", "MIT"],
+      stack: ["TypeScript", "v0.7.4", "Bun", "three.js", "herdr >=0.9.5", "MIT"],
       features: [
         {
           title: { ko: "서 있는 곳이 상태", en: "Where they stand is their state" },
@@ -123,20 +123,20 @@ ts-gate              # v0.1.0 · Linux/macOS Tailnet 전용 일시 포트 게이
         {
           title: { ko: "지시·답변·터미널을 그 자리에서", en: "Prompt, answer and open the terminal in place" },
           desc: {
-            ko: "캐릭터를 누르면 카메라가 그 집터를 비추고 모델·effort·컨텍스트·마지막 지시와 응답·활동 로그·터미널 화면이 한 창에 나옵니다. 입력창으로 지시와 이미지를 보내고(Claude Code·Antigravity 는 / 로 스킬 선택), 권한 대화상자에는 적힌 키 그대로 답하며, 멈추기로 하던 턴만 끊고 ` 로 터미널을 크게 엽니다.",
-            en: "Click a character and the camera frames its house, with its model, effort, context, last prompt and reply, activity log and terminal in one panel. Send prompts and images (pick skills with / in Claude Code and Antigravity), answer permission dialogs with the keys they show, stop just the running turn, and press ` to open the terminal.",
+            ko: "캐릭터를 누르면 카메라가 그 집터를 비추고 모델·effort·컨텍스트·마지막 지시와 응답·활동 로그·터미널 화면이 한 창에 나옵니다. 입력창으로 지시와 이미지를 보내고(Claude Code·Antigravity 는 / 로 스킬 선택), 권한 대화상자에는 적힌 키 그대로 답하며, 멈추기로 하던 턴만 끊고 ` 로 터미널을 크게 엽니다. 플랜 승인을 기다리면 플랜 읽기 창에서 원문을 글로 보고, 고칠 점과 줄 댓글을 적어 보내거나 바로 승인합니다.",
+            en: "Click a character and the camera frames its house, with its model, effort, context, last prompt and reply, activity log and terminal in one panel. Send prompts and images (pick skills with / in Claude Code and Antigravity), answer permission dialogs with the keys they show, stop just the running turn, and press ` to open the terminal. When a plan waits for approval, read it in the plan reader, send fixes with line comments, or approve it there.",
           },
         },
         {
-          title: { ko: "집 짓기 · 휴대폰 · 알림", en: "Build houses, carry on from your phone" },
+          title: { ko: "집 짓기 · 휴대폰 · 여러 PC", en: "Build houses, carry on from your phone, see every PC" },
           desc: {
-            ko: "＋ 집 짓기에서 폴더·워크트리·에이전트·모델·effort·첫 지시를 한 번에 정하고, 같은 저장소의 워크트리는 본채 옆 별채로 붙습니다. tailnet 안에서 휴대폰(홈 화면 앱)으로 이어 쓰고, 종 단추를 켜 두면 에이전트가 끝났거나 확인을 기다릴 때 Web Push 로 알려 주며, 위쪽 막대에서 하네스별 한도 사용량을 봅니다.",
-            en: "Build a house to pick the folder, worktree, agent, model, effort and first prompt in one go; worktrees of the same repo join it as annexes. Carry on from your phone inside the tailnet (installable as a home-screen app), turn on the bell for Web Push when an agent finishes or needs you, and watch each harness's plan limits in the top bar.",
+            ko: "＋ 집 짓기에서 폴더·워크트리·에이전트·모델·effort·첫 지시를 한 번에 정하고, 같은 저장소의 워크트리는 본채 옆 별채로 붙습니다. tailnet 안에서 휴대폰(홈 화면 앱)으로 이어 쓰고, 종 단추를 켜 두면 에이전트가 끝났거나 확인을 기다릴 때 Web Push 로 알려 주며, 위쪽 막대에서 하네스별 한도 사용량을 봅니다. PC 마다 띄운 Agent World 는 전체 보기(/all)에서 PC 하나를 섬 하나로 모아 보고, 섬을 누르면 그 월드로 들어갑니다.",
+            en: "Build a house to pick the folder, worktree, agent, model, effort and first prompt in one go; worktrees of the same repo join it as annexes. Carry on from your phone inside the tailnet (installable as a home-screen app), turn on the bell for Web Push when an agent finishes or needs you, and watch each harness's plan limits in the top bar. The all view (/all) gathers the Agent World of every PC as one island each; click an island to enter that world.",
           },
         },
       ],
       installCmd: "herdr plugin install KyongSik-Yoon/agent-world",
-      cliBlockTitle: "herdr plugin :: agent-world v0.6.47",
+      cliBlockTitle: "herdr plugin :: agent-world v0.7.4",
       cliSnippet: `$ herdr plugin install KyongSik-Yoon/agent-world
 
 $ bun start   # 플러그인 없이 직접 실행
@@ -156,7 +156,7 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
       statusline: {
         type: "custom-world",
         row1: {
-          model: "agent-world[v0.6.47]",
+          model: "agent-world[v0.7.4]",
           mode: "herdr plugin",
           workPct: 44,
           workLabel: "4/9 agents",
@@ -179,14 +179,14 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
       repoUrl: "https://github.com/KyongSik-Yoon/cc-desktop-mod",
       siteUrl: "https://kyongsik-yoon.github.io/cc-desktop-mod/",
       sub: {
-        ko: "v0.81.7 · Claude Code 데스크톱 UX 플러그인 스위트",
-        en: "v0.81.7 · Claude Desktop UI mod & side-pane suite",
+        ko: "v0.81.8 · Claude Code 데스크톱 UX 플러그인 스위트",
+        en: "v0.81.8 · Claude Desktop UI mod & side-pane suite",
       },
       summary: {
-        ko: "Claude Code(>=2.1.328) 터미널 UI를 데스크톱 앱의 Code 탭 감각(프롬프트 말풍선, 상단 Progress Band, 접히는 도구 호출, 마크다운·Mermaid 렌더링, 줄 댓글 Diff·미리보기 패인)으로 탈바꿈시키는 플러그인 마켓플레이스(v0.81.7)입니다.",
-        en: "Transforms Claude Code (>=2.1.328) terminal UI into a Claude Desktop workspace with prompt bubbles, live Progress Band, folded tool runs, Mermaid/table rendering, and inline line-comment diff/preview panes (v0.81.7).",
+        ko: "Claude Code(>=2.1.328) 터미널 UI를 데스크톱 앱의 Code 탭 감각(프롬프트 말풍선, 상단 Progress Band, 접히는 도구 호출, 마크다운·Mermaid 렌더링, 줄 댓글 Diff·미리보기 패인)으로 탈바꿈시키는 플러그인 마켓플레이스(v0.81.8)입니다.",
+        en: "Transforms Claude Code (>=2.1.328) terminal UI into a Claude Desktop workspace with prompt bubbles, live Progress Band, folded tool runs, Mermaid/table rendering, and inline line-comment diff/preview panes (v0.81.8).",
       },
-      stack: ["TypeScript", "v0.81.7", "Claude Code >=2.1.328", "MIT"],
+      stack: ["TypeScript", "v0.81.8", "Claude Code >=2.1.328", "MIT"],
       features: [
         {
           title: { ko: "데스크톱 말풍선 & Progress Band", en: "Prompt Bubbles & Progress Band" },
@@ -211,7 +211,7 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
         },
       ],
       installCmd: "/plugin install desk-look --marketplace KyongSik-Yoon/cc-desktop-mod",
-      cliBlockTitle: "claude-code :: desk-look v0.81.7",
+      cliBlockTitle: "claude-code :: desk-look v0.81.8",
       cliSnippet: `/plugin install desk-look --marketplace KyongSik-Yoon/cc-desktop-mod
 /plugin install desk-plan@cc-desktop-mod
 /plugin install desk-review@cc-desktop-mod
@@ -219,7 +219,7 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
 /plugin install desk-slack@cc-desktop-mod`,
       archNodes: [
         "Claude Code >=2.1.328",
-        "desk-look v0.81.7 Renderer",
+        "desk-look v0.81.8 Renderer",
         "Bubble / Fold / Line Comments",
         "desk-plan · review · asana · slack",
       ],
@@ -279,8 +279,8 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
         {
           title: { ko: "플로팅 버블 & 자동 엔터(⏎)", en: "Floating Bubble & Auto-Enter (⏎)" },
           desc: {
-            ko: "접근성 서비스로 포커스를 빼앗지 않고 글을 삽입하며, 1~5초 후 Enter를 눌러 주는 자동 엔터 링(버블 터치 시 취소)으로 모바일 에이전트 프롬프트를 손대지 않고 보냅니다. 속삭이듯 말해도 받아쓰고(조용히 말하기), 말이 쉴 때마다 조각을 미리 변환해 멈춘 뒤 기다림이 짧습니다.",
-            en: "Injects text via AccessibilityService without stealing focus, featuring an optional 1–5s auto-enter ring countdown (tap bubble to cancel). Whispered speech is kept (quiet speech), and each pause pre-converts the piece so the wait after you stop is short.",
+            ko: "접근성 서비스로 포커스를 빼앗지 않고 글을 삽입하며, 1~5초 후 Enter를 눌러 주는 자동 엔터 링(버블 터치 시 취소)으로 모바일 에이전트 프롬프트를 손대지 않고 보냅니다. 속삭이듯 말해도 받아쓰고(조용히 말하기), 속삭일 때도 말이 쉴 때마다 조각을 미리 변환해 멈춘 뒤 기다림이 짧습니다. 항상 띄운 버블은 쓰지 않을 때 화면 끝 탭으로 비켜 있다가 키보드가 올라오면 다시 나옵니다.",
+            en: "Injects text via AccessibilityService without stealing focus, featuring an optional 1–5s auto-enter ring countdown (tap bubble to cancel). Whispered speech is kept (quiet speech), and each pause pre-converts the piece, whispering included, so the wait after you stop is short. An always-on bubble tucks into an edge tab when idle and slides back out when the keyboard comes up.",
           },
         },
         {
@@ -293,8 +293,8 @@ $ tailscale serve --bg --https=4780 http://127.0.0.1:4780`,
         {
           title: { ko: "Tailscale PC 직송 · 프라이버시 데몬", en: "soksak-daemon (:48620) & soksak-paste" },
           desc: {
-            ko: "무의존성 Rust 데몬(포트 48620)이 Tailscale 망과 연동 코드로 PC 클립보드에 텍스트를 수신(로그에 발화 내용 미기록)하며, Hyprland 한글 IME 깨짐을 막는 soksak-paste를 지원합니다.",
-            en: "Zero-dependency Rust daemon on Tailscale port 48620 relays clipboard text (never logging content) with soksak-paste for IME-safe Hyprland input.",
+            ko: "잠금화면 위젯이나 잠금화면 가장자리 탭을 한 번 누르면 폰을 열지 않고 PC로 받아씁니다. 무의존성 Rust 데몬(포트 48620)이 Tailscale 망과 연동 코드로 PC 클립보드에 텍스트를 수신(로그에 발화 내용 미기록)하며, Hyprland 한글 IME 깨짐을 막는 soksak-paste를 지원합니다.",
+            en: "One tap on the lock-screen widget or edge tab dictates straight to the PC. Zero-dependency Rust daemon on Tailscale port 48620 relays clipboard text (never logging content) with soksak-paste for IME-safe Hyprland input.",
           },
         },
       ],
@@ -527,8 +527,8 @@ route -> gemini-4-carbon-high · tier=carbon_frontier score=3.53 conf=78% · 738
         {
           title: { ko: "네이티브 Linux 데스크톱 GUI (gemini-ui)", en: "Native Linux Desktop GUI (gemini-ui)" },
           desc: {
-            ko: "증분 SSE 마크다운·Canvas 프리뷰·사고 과정 스트리밍, 라이브러리·이미지·예약·노트북·검색(Ctrl+K), 시스템 라이트/다크 자동 추종, 한/영 다국어와 유휴 리드로우 0 최적화를 제공하며, 단일 인스턴스로 동작하고 창을 닫을 때 시스템 트레이(SNI)로 숨길 수 있습니다(--tray·--toggle).",
-            en: "Features incremental SSE Markdown, Canvas previews, Library/Images/Schedules/Notebooks/Search (Ctrl+K), auto Light/Dark theming, EN/KO localization, and zero idle redraws; runs as a single instance and can hide to the system tray (SNI) on close (--tray, --toggle).",
+            ko: "증분 SSE 마크다운·Canvas 프리뷰·사고 과정 스트리밍, 라이브러리·이미지·예약·노트북·검색(Ctrl+K), 시스템 라이트/다크 자동 추종, 한/영 다국어와 유휴 리드로우 0 최적화를 제공하며, 단일 인스턴스로 동작하고 창을 닫을 때 시스템 트레이(SNI)로 숨길 수 있습니다(--tray·--toggle). 사이드바 폭은 끌어서 조절하고 다음 실행에도 유지됩니다.",
+            en: "Features incremental SSE Markdown, Canvas previews, Library/Images/Schedules/Notebooks/Search (Ctrl+K), auto Light/Dark theming, EN/KO localization, and zero idle redraws; runs as a single instance and can hide to the system tray (SNI) on close (--tray, --toggle); drag the sidebar edge to resize it, and the width is kept.",
           },
         },
         {
@@ -541,8 +541,8 @@ route -> gemini-4-carbon-high · tier=carbon_frontier score=3.53 conf=78% · 738
         {
           title: { ko: "Wayland 가상 포인터 · AT-SPI2 & 원커맨드 설치", en: "Wayland Virtual Pointer, AT-SPI2 & 1-Cmd Install" },
           desc: {
-            ko: "순수 Python zwlr_virtual_pointer_manager_v1 가상 포인터와 AT-SPI2 접근성 트리, Hyprland/X11 ui_control을 지원하며 ./install.sh 한 번으로 바이너리·.desktop 런처·systemd 서비스를 설치합니다.",
-            en: "Supports pure-Python zwlr_virtual_pointer_manager_v1 virtual pointer, AT-SPI2 tree inspection, Hyprland/X11 ui_control, and one-command binary + .desktop + systemd installation via ./install.sh.",
+            ko: "순수 Python zwlr_virtual_pointer_manager_v1 가상 포인터와 AT-SPI2 접근성 트리, Hyprland/X11 ui_control을 지원하며 ./install.sh 한 번으로 바이너리·.desktop 런처·systemd 서비스를 설치하고, gemini-remote doctor 로 설정·OAuth 토큰·Gemini 서버 연결·로컬 데몬 소켓을 차례로 점검합니다.",
+            en: "Supports pure-Python zwlr_virtual_pointer_manager_v1 virtual pointer, AT-SPI2 tree inspection, Hyprland/X11 ui_control, and one-command binary + .desktop + systemd installation via ./install.sh, with gemini-remote doctor checking config, OAuth token, Gemini server reachability and the local daemon socket.",
           },
         },
       ],
@@ -556,7 +556,8 @@ route -> gemini-4-carbon-high · tier=carbon_frontier score=3.53 conf=78% · 738
 $ gemini-remote folders add ~/dev/git-repo && gemini-remote register
 [auth]   OAuth credentials verified · Punctual stream connected
 [mcp]    23 tools ready (git, obsidian + external stdio bridge)
-[gui]    gemini-ui (Rust iced 0.14) · Wayland virtual pointer + AT-SPI2`,
+[gui]    gemini-ui (Rust iced 0.14) · Wayland virtual pointer + AT-SPI2
+$ gemini-remote doctor   # 자가 진단 (--json)`,
       archNodes: [
         "gemini-ui (Rust · iced 0.14)",
         "Unix Socket IPC (0600)",
