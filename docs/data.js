@@ -795,6 +795,16 @@ ts-gate v0.1.0 (tailnet 전용 · https://omarchy.tailnet.ts.net)
         },
         {
           kind: "image",
+          src: ASSET + "/agent-world/all.webp",
+          w: 2100,
+          h: 700,
+          caption: {
+            ko: "전체 보기(/all): PC 마다 섬 하나. 맨 위는 모든 PC 를 합친 수, 섬 아래는 그 PC 의 수이고, 열쇠를 넣지 않은 빌드 서버는 잠긴 섬으로만 보입니다 (가상 프로젝트로 띄운 세 월드)",
+            en: "The all view (/all): one island per machine, totals at the top and each machine's counts under its island; the build server, not unlocked yet, shows only as a locked island (three mock worlds)",
+          },
+        },
+        {
+          kind: "image",
           src: ASSET + "/agent-world/build.webp",
           w: 760,
           h: 1092,
